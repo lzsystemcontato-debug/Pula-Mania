@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login — Painel Administrativo | Pula Mania</title>
+<link rel="icon" type="image/png" href="/img/logo.png" />
+<link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <img src="/img/logo.png" alt="Pula Mania" class="logo-img" />
+    <h1>Painel Administrativo</h1>
+    <p class="sub">Pula Mania — gestão de reservas</p>
+
+    <div id="alert" class="alert alert-error"></div>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="username">Usuário</label>
+        <input id="username" type="text" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="password">Senha</label>
+        <input id="password" type="password" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+    </form>
+
+    <div class="login-hint">
+      Acesso padrão inicial: <strong>admin</strong> / <strong>pulamania123</strong><br />
+      Troque a senha em Configurações após o primeiro acesso.
+    </div>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('login-form');
+  const alertEl = document.getElementById('alert');
+
+  // if already authenticated, go straight to dashboard
+  fetch('/api/admin/auth/me').then(r => r.json()).then(d => {
+    if (d.authenticated) window.location.href = '/admin/dashboard';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertEl.className = 'alert alert-error';
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+    try {
+      const res = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alertEl.textContent = data.error || 'Falha no login.';
+        alertEl.classList.add('show');
+      } else {
+        window.location.href = '/admin/dashboard';
+      }
+    } catch (err) {
+      alertEl.textContent = 'Erro de conexão.';
+      alertEl.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    }
+  });
+</script>
+</body>
+</html>

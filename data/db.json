@@ -1,0 +1,85 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Cama Elástica Colorida 4x4m",
+      "description": "Cama elástica tradicional colorida, ideal para festas infantis. Estrutura inflável segura com rede de proteção nas laterais.",
+      "price": 250,
+      "capacity": 8,
+      "size": "4x4 m",
+      "minAge": 3,
+      "icon": "bounce",
+      "color": "#ff6b6b",
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "Castelo Inflável Princesas",
+      "description": "Castelo inflável temático com escorregador integrado. Sucesso garantido entre as crianças.",
+      "price": 320,
+      "capacity": 10,
+      "size": "5x5 m",
+      "minAge": 2,
+      "icon": "castle",
+      "color": "#c084fc",
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "Piscina de Bolinhas + Cama Elástica",
+      "description": "Combo com piscina de bolinhas e cama elástica, perfeito para os pequenos brincarem em segurança.",
+      "price": 280,
+      "capacity": 6,
+      "size": "3x4 m",
+      "minAge": 1,
+      "icon": "balls",
+      "color": "#4dd0e1",
+      "active": true
+    },
+    {
+      "id": 4,
+      "name": "Tobogã Inflável Gigante",
+      "description": "Escorregador inflável de grande porte, com subida em rampa e chegada em colchão de ar.",
+      "price": 380,
+      "capacity": 12,
+      "size": "6x3 m",
+      "minAge": 4,
+      "icon": "slide",
+      "color": "#ffb703",
+      "active": true
+    }
+  ],
+  "bookings": [
+    {
+      "id": 2,
+      "productId": 1,
+      "productName": "Cama Elástica Colorida 4x4m",
+      "customerName": "Laisa",
+      "phone": "16997715568",
+      "email": "Laisalemes17@gmail.com",
+      "eventDate": "2026-08-22",
+      "address": "Rua Martim Afonso de Souza",
+      "notes": "Festa para uma criança de 2 anos",
+      "status": "pending",
+      "createdAt": "2026-08-10T23:34:14.320Z"
+    }
+  ],
+  "blockedDates": [],
+  "admin": {
+    "username": "admin",
+    "salt": "818fec1b2e6f9c64a9c79fa54c18a459",
+    "hash": "4a05830483d437b923dee70009b1692f2456f3f5908ab48ed72f17154a807609cab8eeb7803fb59c3388aa7d6d318983bfdbaa5761e6e992b502d7d889eabdb3"
+  },
+  "settings": {
+    "companyName": "[Nome da Empresa]",
+    "whatsapp": "[WhatsApp]",
+    "email": "[email@empresa.com]",
+    "city": "[Cidade/Região atendida]",
+    "instagram": "[@instagram]"
+  },
+  "nextIds": {
+    "product": 5,
+    "booking": 3,
+    "blockedDate": 3
+  }
+}

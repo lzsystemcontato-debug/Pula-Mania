@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pula Mania — Aluguel de Cama Elástica e Infláveis</title>
+<link rel="icon" type="image/png" href="/img/logo.png" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/" class="brand">
+      <img src="/img/logo.png" alt="Pula Mania" class="logo-img" />
+      <span id="brand-name">Pula Mania</span>
+    </a>
+    <nav class="main-nav" id="main-nav">
+      <a href="#catalogo">Catálogo</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#reservar">Reservar</a>
+      <a href="#contato">Contato</a>
+      <a href="#reservar" class="btn btn-primary btn-sm nav-cta">Fazer reserva</a>
+    </nav>
+    <a href="#reservar" class="btn btn-primary btn-sm desktop-cta">Fazer reserva</a>
+    <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Abrir menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div>
+      <span class="hero-badge">✨ Diversão garantida na sua festa</span>
+      <h1>Alugue uma <span>cama elástica</span> e transforme sua festa em pura diversão</h1>
+      <p>Camas elásticas, castelos infláveis e brinquedos para festas infantis, eventos e comemorações. Entrega, montagem e retirada incluídas. Confira a disponibilidade e reserve online em minutos.</p>
+      <div class="hero-actions">
+        <a href="#catalogo" class="btn btn-primary">Ver catálogo</a>
+        <a id="hero-whatsapp" href="#" target="_blank" class="btn btn-whatsapp">💬 Falar no WhatsApp</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>+500</strong><span>festas atendidas</span></div>
+        <div><strong>100%</strong><span>segurança e higiene</span></div>
+        <div><strong id="stat-city">[Cidade/Região atendida]</strong><span>região atendida</span></div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="hero-stage">
+        <svg viewBox="0 0 320 320" width="100%" height="100%" style="max-width:340px" aria-hidden="true">
+          <circle cx="160" cy="160" r="150" fill="#ffe9ec"/>
+
+          <!-- twinkles -->
+          <circle class="hero-sparkle s1" cx="60" cy="90" r="5" fill="#ffd166"/>
+          <circle class="hero-sparkle s2" cx="255" cy="70" r="4" fill="#4dd0e1"/>
+          <circle class="hero-sparkle s3" cx="270" cy="170" r="6" fill="#06d6a0"/>
+          <circle class="hero-sparkle s1" cx="55" cy="200" r="4" fill="#c084fc"/>
+
+          <!-- ground shadow, pulses as she jumps -->
+          <ellipse class="jump-shadow" cx="160" cy="270" rx="68" ry="10" fill="#1f2937" opacity="0.35"/>
+
+          <!-- trampoline legs -->
+          <rect x="98" y="250" width="9" height="28" rx="4" fill="#c084fc"/>
+          <rect x="213" y="250" width="9" height="28" rx="4" fill="#c084fc"/>
+
+          <!-- trampoline rim + mat -->
+          <ellipse cx="160" cy="250" rx="96" ry="17" fill="#1e3a8a"/>
+          <ellipse class="tramp-mat" cx="160" cy="248" rx="82" ry="12" fill="#ffd166"/>
+        </svg>
+        <img src="/img/girl-jump.png" alt="Menina pulando na cama elástica" class="jumping-girl-img" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="catalogo">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Nosso catálogo</span>
+      <h2>Escolha o brinquedo ideal para sua festa</h2>
+      <p>Todos os equipamentos passam por limpeza e revisão de segurança antes de cada evento.</p>
+    </div>
+    <div id="catalog-grid" class="catalog-grid">
+      <!-- product cards injected by main.js -->
+    </div>
+  </div>
+</section>
+
+<section id="como-funciona" style="background:var(--gray-light)">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Passo a passo</span>
+      <h2>Como funciona o agendamento</h2>
+    </div>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h4>Escolha o brinquedo</h4>
+        <p>Navegue pelo catálogo e selecione a cama elástica ou inflável ideal.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h4>Veja a disponibilidade</h4>
+        <p>Consulte o calendário e escolha uma data livre para o seu evento.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h4>Envie sua reserva</h4>
+        <p>Preencha seus dados e o endereço do evento. É rápido e sem compromisso.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h4>Confirmação</h4>
+        <p>Nossa equipe confirma sua reserva por WhatsApp e organiza a entrega.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="reservar">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Agendamento</span>
+      <h2>Reserve sua data</h2>
+      <p>Selecione um brinquedo do catálogo, escolha a data no calendário e envie sua solicitação.</p>
+    </div>
+
+    <div class="booking-panel">
+      <div>
+        <h3>Disponibilidade</h3>
+        <div id="selected-product-chip" class="selected-product-chip" style="display:none"></div>
+        <div class="calendar" id="calendar"></div>
+        <div class="calendar-legend">
+          <span><i class="legend-dot free"></i> Disponível</span>
+          <span><i class="legend-dot busy"></i> Indisponível</span>
+          <span><i class="legend-dot sel"></i> Selecionada</span>
+        </div>
+      </div>
+
+      <div>
+        <h3>Seus dados</h3>
+        <form id="booking-form">
+          <div class="field">
+            <label for="f-product">Brinquedo</label>
+            <select id="f-product" required></select>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="f-name">Nome completo *</label>
+              <input id="f-name" type="text" required placeholder="Seu nome" />
+            </div>
+            <div class="field">
+              <label for="f-phone">WhatsApp / Telefone *</label>
+              <input id="f-phone" type="tel" required placeholder="(00) 00000-0000" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-email">E-mail</label>
+            <input id="f-email" type="email" placeholder="seuemail@exemplo.com" />
+          </div>
+          <div class="field">
+            <label for="f-address">Endereço do evento *</label>
+            <input id="f-address" type="text" required placeholder="Rua, número, bairro, cidade" />
+          </div>
+          <div class="field">
+            <label for="f-date">Data selecionada</label>
+            <input id="f-date" type="text" disabled placeholder="Selecione uma data no calendário" />
+          </div>
+          <div class="field">
+            <label for="f-notes">Observações</label>
+            <textarea id="f-notes" rows="3" placeholder="Horário do evento, ponto de referência, etc."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Enviar solicitação de reserva</button>
+          <div id="booking-feedback" class="booking-feedback"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contato">
+  <div class="container">
+    <div>
+      <h4 id="footer-brand">Pula Mania</h4>
+      <p>Aluguel de camas elásticas e infláveis para festas e eventos. Diversão segura para todas as idades.</p>
+    </div>
+    <div>
+      <h4>Contato</h4>
+      <p>📍 <span id="footer-city">[Cidade/Região atendida]</span></p>
+      <p>💬 <span id="footer-whatsapp">[WhatsApp]</span></p>
+      <p>✉️ <span id="footer-email">[email@empresa.com]</span></p>
+      <p>📷 <span id="footer-instagram">[@instagram]</span></p>
+    </div>
+    <div>
+      <h4>Links</h4>
+      <p><a href="#catalogo">Catálogo</a></p>
+      <p><a href="#reservar">Reservar</a></p>
+      <p><a class="admin-link" href="/admin">Área administrativa</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="year"></span> Pula Mania. Todos os direitos reservados.</div>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

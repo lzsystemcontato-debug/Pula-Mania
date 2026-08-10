@@ -1,0 +1,15 @@
+{
+  "name": "pula-mania",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site de agendamento para empresa de locacao de cama elastica",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-session": "^1.18.1"
+  }
+}

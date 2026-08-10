@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Administrativo | Pula Mania</title>
+<link rel="icon" type="image/png" href="/img/logo.png" />
+<link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><img src="/img/logo.png" alt="Pula Mania" class="dot" /> Pula Mania</div>
+    <nav class="side-nav">
+      <button data-view="overview" class="active">📊 Visão geral</button>
+      <button data-view="bookings">📋 Reservas</button>
+      <button data-view="calendar">📅 Calendário</button>
+      <button data-view="products">🎪 Produtos</button>
+      <button data-view="blocked">🚫 Datas bloqueadas</button>
+      <button data-view="settings">⚙️ Configurações</button>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/" target="_blank">↗ Ver site público</a>
+      <button id="logout-btn">🚪 Sair</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1 id="view-title">Visão geral</h1>
+      <div class="user-pill">👤 <span id="username-label">admin</span></div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <div class="stat-grid">
+        <div class="stat-card pink"><div class="label">Reservas pendentes</div><div class="value" id="stat-pending">–</div></div>
+        <div class="stat-card green"><div class="label">Confirmadas hoje</div><div class="value" id="stat-today">–</div></div>
+        <div class="stat-card purple"><div class="label">Próximos 7 dias</div><div class="value" id="stat-next7">–</div></div>
+        <div class="stat-card cyan"><div class="label">Produtos ativos</div><div class="value" id="stat-products">–</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Reservas recentes</h2></div>
+        <div id="recent-bookings"></div>
+      </div>
+    </section>
+
+    <!-- BOOKINGS -->
+    <section class="view" id="view-bookings">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Todas as reservas</h2>
+          <div class="filters">
+            <select id="filter-status">
+              <option value="">Todos os status</option>
+              <option value="pending">Pendente</option>
+              <option value="confirmed">Confirmada</option>
+              <option value="completed">Concluída</option>
+              <option value="cancelled">Cancelada</option>
+            </select>
+          </div>
+        </div>
+        <div id="bookings-table"></div>
+      </div>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="view" id="view-calendar">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 id="admin-cal-title">Calendário</h2>
+          <div class="calendar-nav">
+            <button id="admin-cal-prev">‹</button>
+            <strong id="admin-cal-label"></strong>
+            <button id="admin-cal-next">›</button>
+          </div>
+        </div>
+        <div class="admin-calendar-grid" id="admin-calendar"></div>
+      </div>
+      <div class="panel" id="day-detail-panel" style="display:none">
+        <div class="panel-head"><h2 id="day-detail-title">Detalhes do dia</h2></div>
+        <div id="day-detail-content"></div>
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="view" id="view-products">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Produtos / Brinquedos</h2>
+          <button class="btn btn-primary btn-sm" id="add-product-btn">+ Novo produto</button>
+        </div>
+        <div class="products-grid" id="products-grid"></div>
+      </div>
+    </section>
+
+    <!-- BLOCKED DATES -->
+    <section class="view" id="view-blocked">
+      <div class="panel">
+        <div class="panel-head"><h2>Bloquear datas (feriados, manutenção, etc.)</h2></div>
+        <form id="blocked-form" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom: 20px;">
+          <div class="field" style="margin-bottom:0"><label>Data</label><input type="date" id="blocked-date" required /></div>
+          <div class="field" style="margin-bottom:0; flex:1; min-width:200px"><label>Motivo (opcional)</label><input type="text" id="blocked-reason" placeholder="Ex: manutenção do equipamento" /></div>
+          <button type="submit" class="btn btn-primary">Bloquear</button>
+        </form>
+        <div id="blocked-list"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="panel">
+        <div class="panel-head"><h2>Dados da empresa</h2></div>
+        <form id="settings-form">
+          <div class="field"><label>Nome da empresa</label><input id="s-companyName" type="text" /></div>
+          <div class="field"><label>WhatsApp</label><input id="s-whatsapp" type="text" placeholder="Ex: 5511999999999" /></div>
+          <div class="field"><label>E-mail</label><input id="s-email" type="email" /></div>
+          <div class="field"><label>Cidade / região atendida</label><input id="s-city" type="text" /></div>
+          <div class="field"><label>Instagram</label><input id="s-instagram" type="text" /></div>
+          <button type="submit" class="btn btn-primary">Salvar dados</button>
+          <span id="settings-feedback" style="margin-left:12px; font-size:0.85rem; font-weight:600;"></span>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Alterar senha</h2></div>
+        <form id="password-form">
+          <div class="field"><label>Senha atual</label><input id="p-current" type="password" required /></div>
+          <div class="field"><label>Nova senha (mín. 6 caracteres)</label><input id="p-new" type="password" required minlength="6" /></div>
+          <button type="submit" class="btn btn-primary">Atualizar senha</button>
+          <span id="password-feedback" style="margin-left:12px; font-size:0.85rem; font-weight:600;"></span>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Product modal -->
+<div class="modal-backdrop" id="product-modal">
+  <div class="modal">
+    <h3 id="product-modal-title">Novo produto</h3>
+    <form id="product-form">
+      <input type="hidden" id="pf-id" />
+      <div class="field"><label>Nome *</label><input id="pf-name" type="text" required /></div>
+      <div class="field"><label>Descrição</label><textarea id="pf-description" rows="3"></textarea></div>
+      <div class="field" style="display:flex; gap:12px;">
+        <div style="flex:1"><label>Preço/dia (R$) *</label><input id="pf-price" type="number" step="0.01" min="0" required /></div>
+        <div style="flex:1"><label>Capacidade</label><input id="pf-capacity" type="number" min="0" /></div>
+      </div>
+      <div class="field" style="display:flex; gap:12px;">
+        <div style="flex:1"><label>Tamanho</label><input id="pf-size" type="text" placeholder="Ex: 4x4 m" /></div>
+        <div style="flex:1"><label>Idade mínima</label><input id="pf-minAge" type="number" min="0" /></div>
+      </div>
+      <div class="field" style="display:flex; gap:12px;">
+        <div style="flex:1">
+          <label>Ícone</label>
+          <select id="pf-icon">
+            <option value="bounce">Cama elástica</option>
+            <option value="castle">Castelo</option>
+            <option value="balls">Piscina de bolinhas</option>
+            <option value="slide">Tobogã</option>
+          </select>
+        </div>
+        <div style="flex:1"><label>Cor</label><input id="pf-color" type="color" value="#ff6b6b" /></div>
+      </div>
+      <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; font-weight:600; margin: 6px 0 4px;">
+        <input type="checkbox" id="pf-active" checked style="width:auto" /> Ativo (visível no site)
+      </label>
+      <div class="modal-close-row">
+        <button type="button" class="btn btn-outline" id="product-cancel-btn">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/admin/js/dashboard.js"></script>
+</body>
+</html>
