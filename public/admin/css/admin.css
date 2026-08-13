@@ -1,9 +1,9 @@
 :root {
-  --pink: #ff6b6b;
-  --purple: #c084fc;
-  --cyan: #4dd0e1;
-  --orange: #ffb703;
-  --green: #06d6a0;
+  --pink: #ff3d68;
+  --purple: #9d4edd;
+  --cyan: #00c2d1;
+  --orange: #ff8c00;
+  --green: #00c896;
   --red: #ef4444;
   --dark: #1f2937;
   --gray: #6b7280;
@@ -237,10 +237,10 @@ tr:last-child td { border-bottom: none; }
 .modal h3 { margin-top: 0; }
 .modal-close-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
-#bookings-table, #recent-bookings, #blocked-list {
+#bookings-table, #recent-bookings, #blocked-list, #day-detail-content {
   overflow-x: auto;
 }
-#bookings-table table, #recent-bookings table, #blocked-list table {
+#bookings-table table, #recent-bookings table, #blocked-list table, #day-detail-content table {
   min-width: 640px;
 }
 #bookings-table table {

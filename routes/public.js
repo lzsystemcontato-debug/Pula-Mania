@@ -1,6 +1,6 @@
 const express = require('express');
 const { load, save } = require('../lib/db');
-const { getUnavailableDates, isDateAvailable, todayStr } = require('../lib/availability');
+const { getUnavailableDates, isDateAvailable, isRangeAvailable, addDays, todayStr } = require('../lib/availability');
 const { distanceBetweenAddresses } = require('../lib/geo');
 
 const router = express.Router();
@@ -66,9 +66,10 @@ router.post('/distance', async (req, res) => {
 // POST /api/bookings - create a booking request with one or more products
 router.post('/bookings', (req, res) => {
   const db = load();
-  const { productIds, customerName, phone, email, eventDate, address, notes, distanceKm } = req.body || {};
+  const { productIds, customerName, phone, email, eventDate, address, notes, distanceKm, days } = req.body || {};
 
   const ids = Array.isArray(productIds) ? productIds.map(Number).filter(Boolean) : [];
+  const numDays = Math.max(1, Math.min(60, Number(days) || 1));
 
   if (!ids.length || !customerName || !phone || !eventDate || !address) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios e selecione ao menos um brinquedo.' });
@@ -83,12 +84,13 @@ router.post('/bookings', (req, res) => {
     return res.status(400).json({ error: 'Data inválida.' });
   }
 
-  if (!isDateAvailable(db, ids, eventDate)) {
-    return res.status(409).json({ error: 'Essa data não está mais disponível para um dos brinquedos selecionados. Escolha outra data.' });
+  if (!isRangeAvailable(db, ids, eventDate, numDays)) {
+    return res.status(409).json({ error: 'Esse período não está mais disponível para um dos brinquedos selecionados. Escolha outra data ou reduza a quantidade de dias.' });
   }
 
+  const endDate = addDays(eventDate, numDays - 1);
   const items = products.map((p) => ({ productId: p.id, name: p.name, price: p.price }));
-  const subtotal = items.reduce((sum, i) => sum + i.price, 0);
+  const subtotal = Math.round(items.reduce((sum, i) => sum + i.price, 0) * numDays * 100) / 100;
   const km = Number(distanceKm) > 0 ? Number(distanceKm) : 0;
   const travelFee = Math.round(km * db.settings.pricePerKm * 100) / 100;
   const total = Math.round((subtotal + travelFee) * 100) / 100;
@@ -100,6 +102,8 @@ router.post('/bookings', (req, res) => {
     phone: String(phone).trim(),
     email: email ? String(email).trim() : '',
     eventDate,
+    endDate,
+    days: numDays,
     address: String(address).trim(),
     notes: notes ? String(notes).trim() : '',
     distanceKm: km,

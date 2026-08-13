@@ -1,10 +1,10 @@
 :root {
-  --pink: #ff6b6b;
-  --purple: #c084fc;
-  --cyan: #4dd0e1;
-  --orange: #ffb703;
-  --yellow: #ffd166;
-  --green: #06d6a0;
+  --pink: #ff3d68;
+  --purple: #9d4edd;
+  --cyan: #00c2d1;
+  --orange: #ff8c00;
+  --yellow: #ffc233;
+  --green: #00c896;
   --dark: #1f2937;
   --gray: #6b7280;
   --gray-light: #f3f4f6;
@@ -41,7 +41,8 @@ img, svg { display: block; max-width: 100%; }
   z-index: 50;
   background: rgba(255, 253, 249, 0.92);
   backdrop-filter: blur(6px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--pink), var(--orange), var(--yellow), var(--cyan), var(--purple)) 1;
 }
 
 .site-header .container {
@@ -155,16 +156,27 @@ nav.main-nav a:hover { color: var(--pink); }
 /* ---------- Hero ---------- */
 
 .hero {
-  background: radial-gradient(circle at 15% 20%, rgba(255, 107, 107, 0.18), transparent 45%),
-    radial-gradient(circle at 85% 10%, rgba(192, 132, 252, 0.18), transparent 40%),
-    radial-gradient(circle at 50% 100%, rgba(77, 208, 225, 0.15), transparent 45%);
+  background: radial-gradient(circle at 15% 20%, rgba(255, 61, 104, 0.30), transparent 45%),
+    radial-gradient(circle at 85% 10%, rgba(157, 78, 221, 0.30), transparent 42%),
+    radial-gradient(circle at 60% 90%, rgba(0, 194, 209, 0.26), transparent 45%),
+    radial-gradient(circle at 5% 80%, rgba(255, 194, 51, 0.22), transparent 40%);
   padding: 72px 0 56px;
 }
 
 .reservar-section {
-  background: radial-gradient(circle at 85% 15%, rgba(6, 214, 160, 0.14), transparent 45%),
-    radial-gradient(circle at 10% 85%, rgba(255, 183, 3, 0.16), transparent 45%),
-    radial-gradient(circle at 50% 0%, rgba(255, 107, 107, 0.10), transparent 40%);
+  background: radial-gradient(circle at 85% 15%, rgba(0, 200, 150, 0.24), transparent 45%),
+    radial-gradient(circle at 10% 85%, rgba(255, 140, 0, 0.26), transparent 45%),
+    radial-gradient(circle at 50% 0%, rgba(255, 61, 104, 0.18), transparent 40%),
+    radial-gradient(circle at 95% 95%, rgba(157, 78, 221, 0.18), transparent 40%);
+}
+
+.catalog-section {
+  background: radial-gradient(circle at 90% 0%, rgba(255, 194, 51, 0.16), transparent 40%),
+    radial-gradient(circle at 5% 100%, rgba(0, 194, 209, 0.16), transparent 42%);
+}
+
+.how-section {
+  background: linear-gradient(180deg, #fff7ec, #fef2f7);
 }
 
 .hero .container {
@@ -362,6 +374,13 @@ section { padding: 64px 0; }
   font-size: 1.3rem;
   font-weight: 800;
   color: var(--dark);
+}
+
+.product-price .price-value {
+  background: linear-gradient(135deg, var(--pink), var(--orange));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .product-price small { font-size: 0.75rem; font-weight: 500; color: var(--gray); }
@@ -731,6 +750,8 @@ footer {
   color: #e5e7eb;
   padding: 48px 0 24px;
   margin-top: 40px;
+  border-top: 5px solid transparent;
+  border-image: linear-gradient(90deg, var(--pink), var(--orange), var(--yellow), var(--cyan), var(--purple)) 1;
 }
 
 footer .container {

@@ -6,6 +6,9 @@
     calendarMonth: null, // 1-12
     unavailable: [],
     selectedDate: null,
+    days: 1,
+    rangeStatus: 'idle', // idle | ok | error
+    rangeError: '',
     distanceKm: null,
     pricePerKm: 2,
     distanceStatus: 'idle', // idle | loading | ok | error
@@ -13,6 +16,8 @@
     settings: {},
     lightbox: { images: [], index: 0 }
   };
+
+  const unavailableCache = new Map();
 
   const MONTHS = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -31,6 +36,8 @@
   const checklistEl = document.getElementById('product-checklist');
   const calendarEl = document.getElementById('calendar');
   const dateInput = document.getElementById('f-date');
+  const daysInput = document.getElementById('f-days');
+  const rangeStatusEl = document.getElementById('range-status');
   const addressInput = document.getElementById('f-address');
   const distanceStatusEl = document.getElementById('distance-status');
   const budgetEl = document.getElementById('budget-summary');
@@ -72,6 +79,16 @@
   function formatDateBR(dateStr) {
     const [y, m, d] = dateStr.split('-');
     return `${d}/${m}/${y}`;
+  }
+
+  function addDaysJS(dateStr, n) {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function getRangeEnd() {
+    return state.selectedDate ? addDaysJS(state.selectedDate, state.days - 1) : null;
   }
 
   // ---------- Settings ----------
@@ -124,7 +141,7 @@
       .map(
         (p) => `
       <div class="product-card" style="--accent:${p.color}">
-        <div class="product-media" style="background:${p.color}18" data-lightbox="${p.id}">
+        <div class="product-media" style="background:linear-gradient(135deg, ${p.color}33, ${p.color}12)" data-lightbox="${p.id}">
           ${mediaContent(p)}
         </div>
         <div class="product-body">
@@ -135,7 +152,7 @@
             <span>👥 até ${p.capacity || '-'} crianças</span>
             <span>🎂 ${p.minAge || 0}+ anos</span>
           </div>
-          <div class="product-price">${money(p.price)} <small>/ dia</small></div>
+          <div class="product-price"><span class="price-value">${money(p.price)}</span> <small>/ dia</small></div>
           <button class="btn btn-primary btn-block btn-sm" data-select="${p.id}">Agendar este brinquedo</button>
         </div>
       </div>
@@ -195,7 +212,9 @@
   function onSelectionChanged() {
     renderChecklist();
     state.selectedDate = null;
+    state.rangeStatus = 'idle';
     dateInput.value = '';
+    renderRangeStatus();
     if (!state.calendarYear) {
       const now = new Date();
       state.calendarYear = now.getFullYear();
@@ -214,16 +233,26 @@
     }
     calendarEl.innerHTML = '<p style="text-align:center;color:var(--gray)">Carregando...</p>';
     try {
-      const ids = Array.from(state.selectedIds).join(',');
-      const res = await fetch(
-        `/api/availability?productIds=${ids}&year=${state.calendarYear}&month=${state.calendarMonth}`
-      );
-      const data = await res.json();
-      state.unavailable = data.unavailable || [];
+      state.unavailable = Array.from(await fetchUnavailableForMonth(state.calendarYear, state.calendarMonth));
       renderCalendar();
     } catch (e) {
       calendarEl.innerHTML = '<p style="text-align:center;color:var(--gray)">Erro ao carregar disponibilidade.</p>';
     }
+  }
+
+  function idsKey() {
+    return Array.from(state.selectedIds).sort((a, b) => a - b).join(',');
+  }
+
+  async function fetchUnavailableForMonth(year, month) {
+    const cacheKey = `${idsKey()}|${year}-${month}`;
+    if (unavailableCache.has(cacheKey)) return unavailableCache.get(cacheKey);
+    const ids = Array.from(state.selectedIds).join(',');
+    const res = await fetch(`/api/availability?productIds=${ids}&year=${year}&month=${month}`);
+    const data = await res.json();
+    const set = new Set(data.unavailable || []);
+    unavailableCache.set(cacheKey, set);
+    return set;
   }
 
   function renderCalendar() {
@@ -232,13 +261,14 @@
     const firstDow = new Date(year, month - 1, 1).getDay();
     const daysInMonth = new Date(year, month, 0).getDate();
     const unavailableSet = new Set(state.unavailable);
+    const rangeEnd = getRangeEnd();
 
     let cells = '';
     for (let i = 0; i < firstDow; i++) cells += '<div class="calendar-day empty"></div>';
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${pad(month)}-${pad(d)}`;
       const isUnavailable = unavailableSet.has(dateStr);
-      const isSelected = state.selectedDate === dateStr;
+      const isSelected = state.selectedDate && rangeEnd && dateStr >= state.selectedDate && dateStr <= rangeEnd;
       const cls = ['calendar-day'];
       if (isUnavailable) cls.push('unavailable');
       if (isSelected) cls.push('selected');
@@ -264,6 +294,7 @@
         state.selectedDate = cell.dataset.date;
         dateInput.value = formatDateBR(cell.dataset.date);
         renderCalendar();
+        validateRange();
       });
     });
   }
@@ -280,6 +311,86 @@
     state.calendarYear = y;
     state.calendarMonth = m;
     loadAvailability();
+  }
+
+  // ---------- Multi-day range validation ----------
+
+  daysInput.addEventListener('input', () => {
+    let n = parseInt(daysInput.value, 10);
+    if (!n || n < 1) n = 1;
+    if (n > 30) n = 30;
+    state.days = n;
+    renderCalendar();
+    validateRange();
+    renderBudgetSummary();
+  });
+
+  async function validateRange() {
+    if (!state.selectedDate) {
+      state.rangeStatus = 'idle';
+      renderRangeStatus();
+      return;
+    }
+    const start = state.selectedDate;
+    const end = getRangeEnd();
+
+    const months = new Set();
+    let cursor = start;
+    while (cursor <= end) {
+      const [y, m] = cursor.split('-');
+      months.add(`${Number(y)}-${Number(m)}`);
+      cursor = addDaysJS(cursor, 1);
+    }
+
+    try {
+      const sets = await Promise.all(
+        Array.from(months).map((key) => {
+          const [y, m] = key.split('-').map(Number);
+          return fetchUnavailableForMonth(y, m);
+        })
+      );
+      const merged = new Set();
+      sets.forEach((s) => s.forEach((d) => merged.add(d)));
+
+      let conflict = null;
+      let c = start;
+      while (c <= end) {
+        if (merged.has(c)) { conflict = c; break; }
+        c = addDaysJS(c, 1);
+      }
+
+      if (conflict) {
+        state.rangeStatus = 'error';
+        state.rangeError = `A data ${formatDateBR(conflict)} não está disponível dentro do período escolhido. Ajuste a data ou a quantidade de diárias.`;
+      } else {
+        state.rangeStatus = 'ok';
+      }
+    } catch (e) {
+      state.rangeStatus = 'error';
+      state.rangeError = 'Não foi possível confirmar a disponibilidade do período.';
+    }
+    renderRangeStatus();
+    renderBudgetSummary();
+  }
+
+  function renderRangeStatus() {
+    rangeStatusEl.className = 'distance-status';
+    if (!state.selectedDate) {
+      rangeStatusEl.textContent = '';
+      return;
+    }
+    const end = getRangeEnd();
+    if (state.rangeStatus === 'ok') {
+      rangeStatusEl.classList.add('ok');
+      rangeStatusEl.textContent = state.days > 1
+        ? `📅 Período: ${formatDateBR(state.selectedDate)} até ${formatDateBR(end)} (${state.days} diárias)`
+        : `📅 Data: ${formatDateBR(state.selectedDate)}`;
+    } else if (state.rangeStatus === 'error') {
+      rangeStatusEl.classList.add('error');
+      rangeStatusEl.textContent = state.rangeError;
+    } else {
+      rangeStatusEl.textContent = '';
+    }
   }
 
   // ---------- Distance / travel fee ----------
@@ -355,20 +466,22 @@
 
   function computeTotals() {
     const items = getSelectedProducts();
-    const subtotal = items.reduce((sum, p) => sum + p.price, 0);
+    const days = state.days || 1;
+    const subtotal = Math.round(items.reduce((sum, p) => sum + p.price, 0) * days * 100) / 100;
     const km = state.distanceStatus === 'ok' ? state.distanceKm : 0;
     const travelFee = Math.round(km * state.pricePerKm * 100) / 100;
     const total = Math.round((subtotal + travelFee) * 100) / 100;
-    return { items, subtotal, km, travelFee, total };
+    return { items, days, subtotal, km, travelFee, total };
   }
 
   function renderBudgetSummary() {
-    const { items, subtotal, km, travelFee, total } = computeTotals();
+    const { items, days, subtotal, km, travelFee, total } = computeTotals();
 
     if (!items.length) {
       budgetEl.innerHTML = '<p class="budget-empty">Selecione ao menos um brinquedo para ver o valor.</p>';
       whatsappBtn.style.pointerEvents = 'none';
       whatsappBtn.style.opacity = '0.5';
+      setSubmitEnabled(false);
       return;
     }
 
@@ -386,25 +499,46 @@
       feeLine = `<div class="budget-row fee"><span>Taxa de deslocamento</span><span>informe o endereço</span></div>`;
     }
 
+    const periodLine = days > 1
+      ? `<div class="budget-row item"><span>Diárias</span><span>${days} dias</span></div>`
+      : '';
+
     budgetEl.innerHTML = `
-      ${items.map((p) => `<div class="budget-row item"><span>${escapeHtml(p.name)}</span><span>${money(p.price)}</span></div>`).join('')}
+      ${items.map((p) => `<div class="budget-row item"><span>${escapeHtml(p.name)}${days > 1 ? ` (${money(p.price)}/dia)` : ''}</span><span>${money(p.price * days)}</span></div>`).join('')}
+      ${periodLine}
       <div class="budget-row subtotal"><span>Subtotal</span><span>${money(subtotal)}</span></div>
       ${feeLine}
       <div class="budget-row total"><span>Total</span><span>${money(total)}</span></div>
     `;
 
+    setSubmitEnabled(state.rangeStatus !== 'error');
     updateWhatsAppLink();
   }
 
+  function setSubmitEnabled(enabled) {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = !enabled;
+    submitBtn.style.opacity = enabled ? '' : '0.5';
+  }
+
   function updateWhatsAppLink() {
-    const { items, subtotal, km, travelFee, total } = computeTotals();
+    const { items, days, subtotal, km, travelFee, total } = computeTotals();
     if (!items.length) return;
     const wa = String(state.settings.whatsapp || '').replace(/\D/g, '');
     const address = addressInput.value.trim();
 
     let msg = 'Olá! Gostaria de solicitar um orçamento para aluguel de brinquedos.\n\n';
     msg += 'Brinquedos selecionados:\n';
-    items.forEach((p) => { msg += `- ${p.name} — ${money(p.price)}\n`; });
+    items.forEach((p) => {
+      msg += days > 1
+        ? `- ${p.name} — ${money(p.price)}/dia × ${days} dias = ${money(p.price * days)}\n`
+        : `- ${p.name} — ${money(p.price)}\n`;
+    });
+    if (state.selectedDate) {
+      msg += days > 1
+        ? `\nPeríodo: ${formatDateBR(state.selectedDate)} até ${formatDateBR(getRangeEnd())} (${days} diárias)\n`
+        : `\nData: ${formatDateBR(state.selectedDate)}\n`;
+    }
     msg += `\nSubtotal: ${money(subtotal)}\n`;
     if (address) msg += `\nEndereço do evento: ${address}\n`;
     if (state.distanceStatus === 'ok') {
@@ -480,6 +614,11 @@
       return;
     }
 
+    if (state.rangeStatus === 'error') {
+      showFeedback('error', state.rangeError || 'O período escolhido não está disponível.');
+      return;
+    }
+
     const payload = {
       productIds: Array.from(state.selectedIds),
       customerName: document.getElementById('f-name').value.trim(),
@@ -487,6 +626,7 @@
       email: document.getElementById('f-email').value.trim(),
       address: addressInput.value.trim(),
       eventDate: state.selectedDate,
+      days: state.days,
       notes: document.getElementById('f-notes').value.trim(),
       distanceKm: state.distanceStatus === 'ok' ? state.distanceKm : 0
     };
@@ -504,17 +644,26 @@
       const data = await res.json();
       if (!res.ok) {
         showFeedback('error', data.error || 'Não foi possível enviar a reserva.');
-        if (res.status === 409) loadAvailability();
+        if (res.status === 409) {
+          unavailableCache.clear();
+          loadAvailability();
+          validateRange();
+        }
       } else {
         showFeedback('success', 'Reserva enviada com sucesso! Em breve entraremos em contato para confirmar.');
         form.reset();
         state.selectedIds.clear();
         state.selectedDate = null;
+        state.days = 1;
+        state.rangeStatus = 'idle';
         state.distanceStatus = 'idle';
         state.distanceKm = null;
         dateInput.value = '';
+        daysInput.value = '1';
+        unavailableCache.clear();
         renderChecklist();
         renderDistanceStatus();
+        renderRangeStatus();
         renderBudgetSummary();
         loadAvailability();
       }

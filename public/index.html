@@ -73,7 +73,7 @@
   </div>
 </section>
 
-<section id="catalogo">
+<section id="catalogo" class="catalog-section">
   <div class="container">
     <div class="section-head">
       <span class="eyebrow">Nosso catálogo</span>
@@ -86,7 +86,7 @@
   </div>
 </section>
 
-<section id="como-funciona" style="background:var(--gray-light)">
+<section id="como-funciona" class="how-section">
   <div class="container">
     <div class="section-head">
       <span class="eyebrow">Passo a passo</span>
@@ -161,10 +161,17 @@
             <input id="f-address" type="text" required placeholder="Rua, número, bairro, cidade" />
             <small id="distance-status" class="distance-status"></small>
           </div>
-          <div class="field">
-            <label for="f-date">Data selecionada</label>
-            <input id="f-date" type="text" disabled placeholder="Selecione uma data no calendário" />
+          <div class="field-row">
+            <div class="field">
+              <label for="f-date">Data de início</label>
+              <input id="f-date" type="text" disabled placeholder="Selecione uma data no calendário" />
+            </div>
+            <div class="field">
+              <label for="f-days">Quantidade de diárias</label>
+              <input id="f-days" type="number" min="1" max="30" value="1" />
+            </div>
           </div>
+          <small id="range-status" class="distance-status"></small>
           <div class="field">
             <label for="f-notes">Observações</label>
             <textarea id="f-notes" rows="3" placeholder="Horário do evento, ponto de referência, etc."></textarea>

@@ -16,6 +16,13 @@
   function money(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
   function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str == null ? '' : str; return div.innerHTML; }
   function itemNames(b) { return (b.items || []).map((i) => i.name).join(', ') || '-'; }
+  function bookingEnd(b) { return b.endDate || b.eventDate; }
+  function bookingCoversDate(b, dateStr) { return dateStr >= b.eventDate && dateStr <= bookingEnd(b); }
+  function periodLabel(b) {
+    const end = bookingEnd(b);
+    if (end === b.eventDate) return fmtDateBR(b.eventDate);
+    return `${fmtDateBR(b.eventDate)} a ${fmtDateBR(end)} (${b.days || 1}d)`;
+  }
 
   async function api(url, options) {
     const res = await fetch(url, {
@@ -99,11 +106,11 @@
       el.innerHTML = '<div class="empty-state">Nenhuma reserva ainda.</div>';
       return;
     }
-    el.innerHTML = `<table><thead><tr><th>Cliente</th><th>Brinquedos</th><th>Data</th><th>Total</th><th>Status</th></tr></thead><tbody>
+    el.innerHTML = `<table><thead><tr><th>Cliente</th><th>Brinquedos</th><th>Período</th><th>Total</th><th>Status</th></tr></thead><tbody>
       ${recent.map((b) => `<tr>
         <td>${escapeHtml(b.customerName)}</td>
         <td>${escapeHtml(itemNames(b))}</td>
-        <td>${fmtDateBR(b.eventDate)}</td>
+        <td>${periodLabel(b)}</td>
         <td>${money(b.total)}</td>
         <td><span class="badge badge-${b.status}">${STATUS_LABEL[b.status]}</span></td>
       </tr>`).join('')}
@@ -130,10 +137,10 @@
     }
 
     el.innerHTML = `<table><thead><tr>
-        <th>Data</th><th>Cliente</th><th>Contato</th><th>Brinquedos</th><th>Endereço</th><th>Distância</th><th>Total</th><th>Status</th><th>Ações</th>
+        <th>Período</th><th>Cliente</th><th>Contato</th><th>Brinquedos</th><th>Endereço</th><th>Distância</th><th>Total</th><th>Status</th><th>Ações</th>
       </tr></thead><tbody>
       ${list.map((b) => `<tr>
-        <td>${fmtDateBR(b.eventDate)}</td>
+        <td>${periodLabel(b)}</td>
         <td>${escapeHtml(b.customerName)}</td>
         <td>${escapeHtml(b.phone)}${b.email ? '<br>' + escapeHtml(b.email) : ''}</td>
         <td>${escapeHtml(itemNames(b))}</td>
@@ -191,7 +198,7 @@
 
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${monthPrefix}-${pad(d)}`;
-      const dayBookings = state.bookings.filter((b) => b.eventDate === dateStr && b.status !== 'cancelled');
+      const dayBookings = state.bookings.filter((b) => bookingCoversDate(b, dateStr) && b.status !== 'cancelled');
       const isBlocked = blockedInMonth.has(dateStr);
       let tags = dayBookings.slice(0, 2).map((b) => `<span class="d-tag ${b.status}">${escapeHtml(itemNames(b)).slice(0, 14)}</span>`).join('');
       if (dayBookings.length > 2) tags += `<span class="d-tag">+${dayBookings.length - 2}</span>`;
@@ -211,7 +218,7 @@
     const panel = document.getElementById('day-detail-panel');
     panel.style.display = 'block';
     document.getElementById('day-detail-title').textContent = `Detalhes — ${fmtDateBR(dateStr)}`;
-    const dayBookings = state.bookings.filter((b) => b.eventDate === dateStr);
+    const dayBookings = state.bookings.filter((b) => bookingCoversDate(b, dateStr));
     const blocked = state.blockedDates.find((b) => b.date === dateStr);
     let html = '';
     if (blocked) {
@@ -220,10 +227,11 @@
     if (!dayBookings.length) {
       html += '<div class="empty-state">Nenhuma reserva para esta data.</div>';
     } else {
-      html += `<table><thead><tr><th>Cliente</th><th>Brinquedos</th><th>Contato</th><th>Total</th><th>Status</th></tr></thead><tbody>
+      html += `<table><thead><tr><th>Cliente</th><th>Brinquedos</th><th>Período</th><th>Contato</th><th>Total</th><th>Status</th></tr></thead><tbody>
         ${dayBookings.map((b) => `<tr>
           <td>${escapeHtml(b.customerName)}</td>
           <td>${escapeHtml(itemNames(b))}</td>
+          <td>${periodLabel(b)}</td>
           <td>${escapeHtml(b.phone)}</td>
           <td>${money(b.total)}</td>
           <td><span class="badge badge-${b.status}">${STATUS_LABEL[b.status]}</span></td>

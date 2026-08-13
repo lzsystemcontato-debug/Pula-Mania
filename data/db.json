@@ -52,7 +52,9 @@
       "subtotal": 250,
       "distanceKm": 0,
       "travelFee": 0,
-      "total": 250
+      "total": 250,
+      "days": 1,
+      "endDate": "2026-08-22"
     }
   ],
   "blockedDates": [],
@@ -67,12 +69,12 @@
     "email": "pulamaniafesta.rp@gmail.com",
     "city": "Ribeirão Preto",
     "instagram": "@pulamania.rp",
-    "address": "",
+    "address": "R. Japurá, 4403 - Jardim Jandaia, Ribeirão Preto - SP",
     "pricePerKm": 2
   },
   "nextIds": {
     "product": 6,
-    "booking": 4,
-    "blockedDate": 3
+    "booking": 5,
+    "blockedDate": 4
   }
 }
