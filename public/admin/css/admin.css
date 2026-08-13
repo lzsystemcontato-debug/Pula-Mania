@@ -193,7 +193,13 @@ tr:last-child td { border-bottom: none; }
 /* products grid */
 .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
 .product-admin-card { border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
-.product-admin-card .swatch { width: 100%; height: 70px; border-radius: 10px; margin-bottom: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.6rem; }
+.product-admin-card .swatch { position: relative; width: 100%; height: 70px; border-radius: 10px; margin-bottom: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.6rem; }
+.swatch-badge { position: absolute; bottom: 6px; right: 6px; background: rgba(31,41,55,0.75); color: white; font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+
+.image-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.image-list-row { display: flex; gap: 8px; align-items: center; }
+.image-list-row input { flex: 1; padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 0.85rem; }
+.image-remove-btn { flex-shrink: 0; padding: 8px 11px; }
 .product-admin-card h4 { margin: 0 0 4px; font-size: 0.95rem; }
 .product-admin-card .price { font-weight: 800; color: var(--pink); margin: 6px 0; }
 .product-admin-card .inactive-tag { color: var(--gray); font-size: 0.75rem; font-style: italic; }
@@ -236,6 +242,9 @@ tr:last-child td { border-bottom: none; }
 }
 #bookings-table table, #recent-bookings table, #blocked-list table {
   min-width: 640px;
+}
+#bookings-table table {
+  min-width: 920px;
 }
 
 @media (max-width: 900px) {

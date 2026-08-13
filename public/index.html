@@ -95,8 +95,8 @@
     <div class="steps">
       <div class="step-card">
         <div class="step-num">1</div>
-        <h4>Escolha o brinquedo</h4>
-        <p>Navegue pelo catálogo e selecione a cama elástica ou inflável ideal.</p>
+        <h4>Escolha os brinquedos</h4>
+        <p>Navegue pelo catálogo e selecione um ou mais brinquedos para sua festa.</p>
       </div>
       <div class="step-card">
         <div class="step-num">2</div>
@@ -117,18 +117,20 @@
   </div>
 </section>
 
-<section id="reservar">
+<section id="reservar" class="reservar-section">
   <div class="container">
     <div class="section-head">
       <span class="eyebrow">Agendamento</span>
-      <h2>Reserve sua data</h2>
-      <p>Selecione um brinquedo do catálogo, escolha a data no calendário e envie sua solicitação.</p>
+      <h2>Monte seu orçamento</h2>
+      <p>Selecione um ou mais brinquedos, escolha a data e informe o endereço — o valor é calculado automaticamente.</p>
     </div>
 
     <div class="booking-panel">
       <div>
-        <h3>Disponibilidade</h3>
-        <div id="selected-product-chip" class="selected-product-chip" style="display:none"></div>
+        <h3>1. Escolha os brinquedos</h3>
+        <div id="product-checklist" class="product-checklist"></div>
+
+        <h3 class="calendar-title">2. Disponibilidade</h3>
         <div class="calendar" id="calendar"></div>
         <div class="calendar-legend">
           <span><i class="legend-dot free"></i> Disponível</span>
@@ -138,12 +140,8 @@
       </div>
 
       <div>
-        <h3>Seus dados</h3>
+        <h3>3. Seus dados</h3>
         <form id="booking-form">
-          <div class="field">
-            <label for="f-product">Brinquedo</label>
-            <select id="f-product" required></select>
-          </div>
           <div class="field-row">
             <div class="field">
               <label for="f-name">Nome completo *</label>
@@ -161,6 +159,7 @@
           <div class="field">
             <label for="f-address">Endereço do evento *</label>
             <input id="f-address" type="text" required placeholder="Rua, número, bairro, cidade" />
+            <small id="distance-status" class="distance-status"></small>
           </div>
           <div class="field">
             <label for="f-date">Data selecionada</label>
@@ -170,13 +169,28 @@
             <label for="f-notes">Observações</label>
             <textarea id="f-notes" rows="3" placeholder="Horário do evento, ponto de referência, etc."></textarea>
           </div>
+
+          <h3>4. Resumo do orçamento</h3>
+          <div id="budget-summary" class="budget-summary">
+            <p class="budget-empty">Selecione ao menos um brinquedo para ver o valor.</p>
+          </div>
+
           <button type="submit" class="btn btn-primary btn-block">Enviar solicitação de reserva</button>
+          <a id="whatsapp-budget-btn" href="#" target="_blank" class="btn btn-whatsapp btn-block" style="margin-top:10px">💬 Enviar orçamento por WhatsApp</a>
           <div id="booking-feedback" class="booking-feedback"></div>
         </form>
       </div>
     </div>
   </div>
 </section>
+
+<div class="lightbox-backdrop" id="lightbox">
+  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Fechar">✕</button>
+  <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Foto anterior">‹</button>
+  <img id="lightbox-img" src="" alt="" />
+  <button type="button" class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Próxima foto">›</button>
+  <div class="lightbox-dots" id="lightbox-dots"></div>
+</div>
 
 <footer id="contato">
   <div class="container">

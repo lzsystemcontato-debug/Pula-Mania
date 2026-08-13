@@ -123,7 +123,7 @@ router.get('/products', (req, res) => {
 
 router.post('/products', (req, res) => {
   const db = load();
-  const { name, description, price, capacity, size, minAge, icon, color } = req.body || {};
+  const { name, description, price, capacity, size, minAge, icon, color, images } = req.body || {};
   if (!name || !price) return res.status(400).json({ error: 'Nome e preço são obrigatórios.' });
   const product = {
     id: db.nextIds.product++,
@@ -135,6 +135,7 @@ router.post('/products', (req, res) => {
     minAge: minAge ? Number(minAge) : null,
     icon: icon || 'bounce',
     color: color || '#ff6b6b',
+    images: Array.isArray(images) ? images.map((s) => String(s).trim()).filter(Boolean) : [],
     active: true
   };
   db.products.push(product);
@@ -146,7 +147,7 @@ router.put('/products/:id', (req, res) => {
   const db = load();
   const product = db.products.find((p) => p.id === Number(req.params.id));
   if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
-  const { name, description, price, capacity, size, minAge, icon, color, active } = req.body || {};
+  const { name, description, price, capacity, size, minAge, icon, color, images, active } = req.body || {};
   if (name !== undefined) product.name = String(name).trim();
   if (description !== undefined) product.description = String(description).trim();
   if (price !== undefined) product.price = Number(price);
@@ -155,6 +156,9 @@ router.put('/products/:id', (req, res) => {
   if (minAge !== undefined) product.minAge = Number(minAge);
   if (icon !== undefined) product.icon = icon;
   if (color !== undefined) product.color = color;
+  if (images !== undefined) {
+    product.images = Array.isArray(images) ? images.map((s) => String(s).trim()).filter(Boolean) : [];
+  }
   if (active !== undefined) product.active = Boolean(active);
   save();
   res.json({ product });
@@ -202,12 +206,14 @@ router.delete('/blocked-dates/:id', (req, res) => {
 
 router.put('/settings', (req, res) => {
   const db = load();
-  const { companyName, whatsapp, email, city, instagram } = req.body || {};
+  const { companyName, whatsapp, email, city, instagram, address, pricePerKm } = req.body || {};
   if (companyName !== undefined) db.settings.companyName = companyName;
   if (whatsapp !== undefined) db.settings.whatsapp = whatsapp;
   if (email !== undefined) db.settings.email = email;
   if (city !== undefined) db.settings.city = city;
   if (instagram !== undefined) db.settings.instagram = instagram;
+  if (address !== undefined) db.settings.address = address;
+  if (pricePerKm !== undefined) db.settings.pricePerKm = Number(pricePerKm) || 0;
   save();
   res.json({ settings: db.settings });
 });

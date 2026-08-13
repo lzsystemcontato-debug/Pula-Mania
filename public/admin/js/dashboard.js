@@ -15,6 +15,7 @@
   function fmtDateBR(dateStr) { const [y,m,d] = dateStr.split('-'); return `${d}/${m}/${y}`; }
   function money(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
   function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str == null ? '' : str; return div.innerHTML; }
+  function itemNames(b) { return (b.items || []).map((i) => i.name).join(', ') || '-'; }
 
   async function api(url, options) {
     const res = await fetch(url, {
@@ -52,11 +53,13 @@
 
     document.getElementById('blocked-form').addEventListener('submit', onAddBlockedDate);
     document.getElementById('settings-form').addEventListener('submit', onSaveSettings);
+    document.getElementById('delivery-form').addEventListener('submit', onSaveDelivery);
     document.getElementById('password-form').addEventListener('submit', onChangePassword);
 
     document.getElementById('add-product-btn').addEventListener('click', () => openProductModal(null));
     document.getElementById('product-cancel-btn').addEventListener('click', closeProductModal);
     document.getElementById('product-form').addEventListener('submit', onSaveProduct);
+    document.getElementById('pf-add-image-btn').addEventListener('click', () => addImageRow(''));
 
     document.getElementById('admin-cal-prev').addEventListener('click', () => shiftAdminMonth(-1));
     document.getElementById('admin-cal-next').addEventListener('click', () => shiftAdminMonth(1));
@@ -96,11 +99,12 @@
       el.innerHTML = '<div class="empty-state">Nenhuma reserva ainda.</div>';
       return;
     }
-    el.innerHTML = `<table><thead><tr><th>Cliente</th><th>Brinquedo</th><th>Data</th><th>Status</th></tr></thead><tbody>
+    el.innerHTML = `<table><thead><tr><th>Cliente</th><th>Brinquedos</th><th>Data</th><th>Total</th><th>Status</th></tr></thead><tbody>
       ${recent.map((b) => `<tr>
         <td>${escapeHtml(b.customerName)}</td>
-        <td>${escapeHtml(b.productName)}</td>
+        <td>${escapeHtml(itemNames(b))}</td>
         <td>${fmtDateBR(b.eventDate)}</td>
+        <td>${money(b.total)}</td>
         <td><span class="badge badge-${b.status}">${STATUS_LABEL[b.status]}</span></td>
       </tr>`).join('')}
     </tbody></table>`;
@@ -126,14 +130,16 @@
     }
 
     el.innerHTML = `<table><thead><tr>
-        <th>Data</th><th>Cliente</th><th>Contato</th><th>Brinquedo</th><th>Endereço</th><th>Status</th><th>Ações</th>
+        <th>Data</th><th>Cliente</th><th>Contato</th><th>Brinquedos</th><th>Endereço</th><th>Distância</th><th>Total</th><th>Status</th><th>Ações</th>
       </tr></thead><tbody>
       ${list.map((b) => `<tr>
         <td>${fmtDateBR(b.eventDate)}</td>
         <td>${escapeHtml(b.customerName)}</td>
         <td>${escapeHtml(b.phone)}${b.email ? '<br>' + escapeHtml(b.email) : ''}</td>
-        <td>${escapeHtml(b.productName)}</td>
+        <td>${escapeHtml(itemNames(b))}</td>
         <td>${escapeHtml(b.address)}</td>
+        <td>${b.distanceKm ? `${b.distanceKm.toLocaleString('pt-BR')} km<br><span style="color:var(--gray)">${money(b.travelFee)}</span>` : '-'}</td>
+        <td><strong>${money(b.total)}</strong><br><span style="color:var(--gray);font-size:0.75rem">subtotal ${money(b.subtotal)}</span></td>
         <td><span class="badge badge-${b.status}">${STATUS_LABEL[b.status]}</span></td>
         <td class="actions-cell">
           ${b.status !== 'confirmed' ? `<button class="btn btn-outline btn-sm" data-action="confirmed" data-id="${b.id}">Confirmar</button>` : ''}
@@ -187,7 +193,7 @@
       const dateStr = `${monthPrefix}-${pad(d)}`;
       const dayBookings = state.bookings.filter((b) => b.eventDate === dateStr && b.status !== 'cancelled');
       const isBlocked = blockedInMonth.has(dateStr);
-      let tags = dayBookings.slice(0, 2).map((b) => `<span class="d-tag ${b.status}">${escapeHtml(b.productName).slice(0, 14)}</span>`).join('');
+      let tags = dayBookings.slice(0, 2).map((b) => `<span class="d-tag ${b.status}">${escapeHtml(itemNames(b)).slice(0, 14)}</span>`).join('');
       if (dayBookings.length > 2) tags += `<span class="d-tag">+${dayBookings.length - 2}</span>`;
       if (isBlocked) tags += `<span class="d-tag blocked-tag">Bloqueado</span>`;
       html += `<div class="admin-cal-day ${isBlocked ? 'blocked' : ''}" data-date="${dateStr}">
@@ -214,11 +220,12 @@
     if (!dayBookings.length) {
       html += '<div class="empty-state">Nenhuma reserva para esta data.</div>';
     } else {
-      html += `<table><thead><tr><th>Cliente</th><th>Brinquedo</th><th>Contato</th><th>Status</th></tr></thead><tbody>
+      html += `<table><thead><tr><th>Cliente</th><th>Brinquedos</th><th>Contato</th><th>Total</th><th>Status</th></tr></thead><tbody>
         ${dayBookings.map((b) => `<tr>
           <td>${escapeHtml(b.customerName)}</td>
-          <td>${escapeHtml(b.productName)}</td>
+          <td>${escapeHtml(itemNames(b))}</td>
           <td>${escapeHtml(b.phone)}</td>
+          <td>${money(b.total)}</td>
           <td><span class="badge badge-${b.status}">${STATUS_LABEL[b.status]}</span></td>
         </tr>`).join('')}
       </tbody></table>`;
@@ -237,9 +244,14 @@
   function renderProducts() {
     const el = document.getElementById('products-grid');
     if (!state.products.length) { el.innerHTML = '<div class="empty-state">Nenhum produto cadastrado.</div>'; return; }
-    el.innerHTML = state.products.map((p) => `
+    el.innerHTML = state.products.map((p) => {
+      const cover = p.images && p.images[0];
+      return `
       <div class="product-admin-card">
-        <div class="swatch" style="background:${p.color}22">🎪</div>
+        <div class="swatch" style="background:${p.color}22; ${cover ? `background-image:url('${cover}'); background-size:cover; background-position:center;` : ''}">
+          ${cover ? '' : '🎪'}
+          ${p.images && p.images.length > 1 ? `<span class="swatch-badge">📷 ${p.images.length}</span>` : ''}
+        </div>
         <h4>${escapeHtml(p.name)}</h4>
         <div class="price">${money(p.price)}/dia</div>
         <div style="font-size:0.78rem;color:var(--gray)">${escapeHtml(p.size || '-')} · até ${p.capacity || '-'} crianças</div>
@@ -250,7 +262,8 @@
           <button class="btn btn-danger btn-sm" data-del="${p.id}">Excluir</button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     el.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', () => openProductModal(Number(btn.dataset.edit))));
     el.querySelectorAll('[data-toggle]').forEach((btn) => btn.addEventListener('click', async () => {
@@ -265,6 +278,32 @@
     }));
   }
 
+  // ---- dynamic photo list in the product form ----
+
+  function addImageRow(value) {
+    const list = document.getElementById('pf-images-list');
+    const row = document.createElement('div');
+    row.className = 'image-list-row';
+    row.innerHTML = `
+      <input type="text" class="pf-image-input" placeholder="/img/products/arquivo.jpg" value="${value ? escapeHtml(value) : ''}" />
+      <button type="button" class="btn btn-outline btn-sm image-remove-btn" aria-label="Remover">✕</button>
+    `;
+    row.querySelector('.image-remove-btn').addEventListener('click', () => row.remove());
+    list.appendChild(row);
+  }
+
+  function renderImageRows(images) {
+    const list = document.getElementById('pf-images-list');
+    list.innerHTML = '';
+    (images && images.length ? images : ['']).forEach((img) => addImageRow(img));
+  }
+
+  function collectImages() {
+    return Array.from(document.querySelectorAll('.pf-image-input'))
+      .map((input) => input.value.trim())
+      .filter(Boolean);
+  }
+
   function openProductModal(id) {
     const modal = document.getElementById('product-modal');
     const isEdit = !!id;
@@ -277,6 +316,7 @@
     document.getElementById('pf-capacity').value = p ? p.capacity || '' : '';
     document.getElementById('pf-size').value = p ? p.size || '' : '';
     document.getElementById('pf-minAge').value = p ? p.minAge || '' : '';
+    renderImageRows(p ? p.images : []);
     document.getElementById('pf-icon').value = p ? p.icon : 'bounce';
     document.getElementById('pf-color').value = p ? p.color : '#ff6b6b';
     document.getElementById('pf-active').checked = p ? p.active : true;
@@ -295,6 +335,7 @@
       capacity: Number(document.getElementById('pf-capacity').value) || null,
       size: document.getElementById('pf-size').value.trim(),
       minAge: Number(document.getElementById('pf-minAge').value) || null,
+      images: collectImages(),
       icon: document.getElementById('pf-icon').value,
       color: document.getElementById('pf-color').value,
       active: document.getElementById('pf-active').checked
@@ -353,6 +394,8 @@
     document.getElementById('s-email').value = s.email || '';
     document.getElementById('s-city').value = s.city || '';
     document.getElementById('s-instagram').value = s.instagram || '';
+    document.getElementById('s-address').value = s.address || '';
+    document.getElementById('s-pricePerKm').value = s.pricePerKm != null ? s.pricePerKm : 2;
   }
 
   async function onSaveSettings(e) {
@@ -364,6 +407,24 @@
       email: document.getElementById('s-email').value.trim(),
       city: document.getElementById('s-city').value.trim(),
       instagram: document.getElementById('s-instagram').value.trim()
+    };
+    try {
+      await api('/api/admin/settings', { method: 'PUT', body: JSON.stringify(payload) });
+      fb.style.color = '#047857';
+      fb.textContent = 'Salvo com sucesso!';
+      setTimeout(() => (fb.textContent = ''), 3000);
+    } catch (err) {
+      fb.style.color = '#b91c1c';
+      fb.textContent = err.message;
+    }
+  }
+
+  async function onSaveDelivery(e) {
+    e.preventDefault();
+    const fb = document.getElementById('delivery-feedback');
+    const payload = {
+      address: document.getElementById('s-address').value.trim(),
+      pricePerKm: Number(document.getElementById('s-pricePerKm').value) || 0
     };
     try {
       await api('/api/admin/settings', { method: 'PUT', body: JSON.stringify(payload) });

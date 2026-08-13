@@ -82,7 +82,7 @@ img, svg { display: block; max-width: 100%; }
 .nav-toggle.open span:nth-child(2) { opacity: 0; }
 .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-.nav-cta { display: none; }
+nav.main-nav .nav-cta { display: none; }
 
 .brand {
   display: flex;
@@ -159,6 +159,12 @@ nav.main-nav a:hover { color: var(--pink); }
     radial-gradient(circle at 85% 10%, rgba(192, 132, 252, 0.18), transparent 40%),
     radial-gradient(circle at 50% 100%, rgba(77, 208, 225, 0.15), transparent 45%);
   padding: 72px 0 56px;
+}
+
+.reservar-section {
+  background: radial-gradient(circle at 85% 15%, rgba(6, 214, 160, 0.14), transparent 45%),
+    radial-gradient(circle at 10% 85%, rgba(255, 183, 3, 0.16), transparent 45%),
+    radial-gradient(circle at 50% 0%, rgba(255, 107, 107, 0.10), transparent 40%);
 }
 
 .hero .container {
@@ -318,15 +324,23 @@ section { padding: 64px 0; }
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease;
+  border-top: 5px solid var(--accent, var(--pink));
 }
 
 .product-card:hover { transform: translateY(-6px); }
 
 .product-media {
-  height: 160px;
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .product-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
@@ -497,6 +511,183 @@ section { padding: 64px 0; }
 .booking-feedback.success { display: block; background: #d1fae5; color: #047857; }
 .booking-feedback.error { display: block; background: #fee2e2; color: #b91c1c; }
 
+/* ---------- Product checklist (multi-select) ---------- */
+
+.product-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.checklist-item:hover { border-color: var(--pink); }
+.checklist-item.checked { border-color: var(--pink); background: #fff5f5; }
+
+.checklist-item .thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--gray-light);
+}
+
+.checklist-item .info { flex: 1; min-width: 0; }
+.checklist-item .info strong { display: block; font-size: 0.92rem; }
+.checklist-item .info span { color: var(--gray); font-size: 0.8rem; }
+
+.checklist-item .checkbox-visual {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: white;
+}
+.checklist-item.checked .checkbox-visual { background: var(--pink); border-color: var(--pink); }
+
+.calendar-title { margin-top: 24px; }
+
+.distance-status {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--gray);
+}
+.distance-status.ok { color: #047857; font-weight: 600; }
+.distance-status.error { color: #b91c1c; font-weight: 600; }
+.distance-status.loading { color: var(--pink); }
+
+/* ---------- Budget summary ---------- */
+
+.budget-summary {
+  background: var(--gray-light);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  font-size: 0.88rem;
+}
+
+.budget-empty { margin: 0; color: var(--gray); text-align: center; }
+
+.budget-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.budget-row.item span:first-child { color: var(--dark); }
+.budget-row.subtotal { border-top: 1px dashed var(--border); margin-top: 6px; padding-top: 10px; font-weight: 700; }
+.budget-row.fee span:last-child { color: var(--gray); }
+.budget-row.total {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff0f0, #fff7e6);
+  border: 1.5px solid #ffd9d9;
+}
+.budget-row.total span:last-child {
+  background: linear-gradient(135deg, var(--pink), var(--orange));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Photo lightbox ---------- */
+
+.product-media { position: relative; cursor: pointer; }
+.product-media .media-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(31, 41, 55, 0.65);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.lightbox-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.92);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-backdrop.show { display: flex; }
+
+.lightbox-backdrop img {
+  max-width: min(90vw, 700px);
+  max-height: 78vh;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.lightbox-nav {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  cursor: pointer;
+  margin: 0 18px;
+  flex-shrink: 0;
+}
+.lightbox-nav:hover { background: rgba(255,255,255,0.3); }
+
+.lightbox-dots {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+.lightbox-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+}
+.lightbox-dots .dot.active { background: white; }
+
 /* ---------- How it works ---------- */
 
 .steps {
@@ -525,6 +716,10 @@ section { padding: 64px 0; }
   justify-content: center;
   margin: 0 auto 14px;
 }
+
+.step-card:nth-child(2) .step-num { background: linear-gradient(135deg, var(--purple), var(--pink)); }
+.step-card:nth-child(3) .step-num { background: linear-gradient(135deg, var(--cyan), var(--purple)); }
+.step-card:nth-child(4) .step-num { background: linear-gradient(135deg, var(--green), var(--cyan)); }
 
 .step-card h4 { margin: 0 0 8px; }
 .step-card p { margin: 0; color: var(--gray); font-size: 0.88rem; }

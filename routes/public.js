@@ -1,12 +1,15 @@
 const express = require('express');
 const { load, save } = require('../lib/db');
 const { getUnavailableDates, isDateAvailable, todayStr } = require('../lib/availability');
+const { distanceBetweenAddresses } = require('../lib/geo');
 
 const router = express.Router();
 
 // GET /api/settings
 router.get('/settings', (req, res) => {
   const db = load();
+  // don't leak the internal price-per-km / origin address needed only for calc consistency,
+  // but they're needed by the public booking form to show the rate — safe to expose.
   res.json(db.settings);
 });
 
@@ -24,49 +27,85 @@ router.get('/products/:id', (req, res) => {
   res.json(product);
 });
 
-// GET /api/availability?productId=1&year=2026&month=8
+// GET /api/availability?productIds=1,2,3&year=2026&month=8
 router.get('/availability', (req, res) => {
   const db = load();
-  const productId = Number(req.query.productId);
+  const productIds = String(req.query.productIds || req.query.productId || '')
+    .split(',')
+    .map((s) => Number(s.trim()))
+    .filter(Boolean);
   const year = Number(req.query.year);
   const month = Number(req.query.month);
-  if (!productId || !year || !month) {
+  if (!productIds.length || !year || !month) {
     return res.status(400).json({ error: 'Parâmetros inválidos' });
   }
-  const unavailable = getUnavailableDates(db, productId, year, month);
+  const unavailable = getUnavailableDates(db, productIds, year, month);
   res.json({ unavailable });
 });
 
-// POST /api/bookings - create a booking request
+// POST /api/distance - { address } -> { km }
+router.post('/distance', async (req, res) => {
+  const db = load();
+  const { address } = req.body || {};
+  if (!address || !String(address).trim()) {
+    return res.status(400).json({ error: 'Informe o endereço do evento.' });
+  }
+  if (!db.settings.address) {
+    return res.status(400).json({
+      error: 'O endereço da empresa ainda não foi configurado no painel administrativo. A taxa de deslocamento não pode ser calculada agora.'
+    });
+  }
+  try {
+    const km = await distanceBetweenAddresses(db.settings.address, String(address).trim());
+    res.json({ km, pricePerKm: db.settings.pricePerKm });
+  } catch (err) {
+    res.status(422).json({ error: err.message || 'Não foi possível calcular a distância para este endereço.' });
+  }
+});
+
+// POST /api/bookings - create a booking request with one or more products
 router.post('/bookings', (req, res) => {
   const db = load();
-  const { productId, customerName, phone, email, eventDate, address, notes } = req.body || {};
+  const { productIds, customerName, phone, email, eventDate, address, notes, distanceKm } = req.body || {};
 
-  if (!productId || !customerName || !phone || !eventDate || !address) {
-    return res.status(400).json({ error: 'Preencha todos os campos obrigatórios.' });
+  const ids = Array.isArray(productIds) ? productIds.map(Number).filter(Boolean) : [];
+
+  if (!ids.length || !customerName || !phone || !eventDate || !address) {
+    return res.status(400).json({ error: 'Preencha todos os campos obrigatórios e selecione ao menos um brinquedo.' });
   }
 
-  const product = db.products.find((p) => p.id === Number(productId) && p.active);
-  if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
+  const products = ids.map((id) => db.products.find((p) => p.id === id && p.active)).filter(Boolean);
+  if (products.length !== ids.length) {
+    return res.status(404).json({ error: 'Um ou mais brinquedos selecionados não foram encontrados.' });
+  }
 
   if (eventDate < todayStr()) {
     return res.status(400).json({ error: 'Data inválida.' });
   }
 
-  if (!isDateAvailable(db, product.id, eventDate)) {
-    return res.status(409).json({ error: 'Essa data não está mais disponível para este item. Escolha outra data.' });
+  if (!isDateAvailable(db, ids, eventDate)) {
+    return res.status(409).json({ error: 'Essa data não está mais disponível para um dos brinquedos selecionados. Escolha outra data.' });
   }
+
+  const items = products.map((p) => ({ productId: p.id, name: p.name, price: p.price }));
+  const subtotal = items.reduce((sum, i) => sum + i.price, 0);
+  const km = Number(distanceKm) > 0 ? Number(distanceKm) : 0;
+  const travelFee = Math.round(km * db.settings.pricePerKm * 100) / 100;
+  const total = Math.round((subtotal + travelFee) * 100) / 100;
 
   const booking = {
     id: db.nextIds.booking++,
-    productId: product.id,
-    productName: product.name,
+    items,
     customerName: String(customerName).trim(),
     phone: String(phone).trim(),
     email: email ? String(email).trim() : '',
     eventDate,
     address: String(address).trim(),
     notes: notes ? String(notes).trim() : '',
+    distanceKm: km,
+    travelFee,
+    subtotal,
+    total,
     status: 'pending',
     createdAt: new Date().toISOString()
   };
