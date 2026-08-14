@@ -151,6 +151,7 @@
             <span>📐 ${escapeHtml(p.size || '-')}</span>
             <span>👥 até ${p.capacity || '-'} crianças</span>
             <span>🎂 ${p.minAge || 0}+ anos</span>
+            <span>⏱ até 5h por diária</span>
           </div>
           <div class="product-price"><span class="price-value">${money(p.price)}</span> <small>/ dia</small></div>
           <button class="btn btn-primary btn-block btn-sm" data-select="${p.id}">Agendar este brinquedo</button>
@@ -187,12 +188,15 @@
       .map((p) => {
         const checked = state.selectedIds.has(p.id);
         const thumb = p.images && p.images.length ? `<img class="thumb" src="${p.images[0]}" alt="" />` : `<div class="thumb"></div>`;
+        const partner = p.comboPartnerId ? state.products.find((x) => x.id === p.comboPartnerId) : null;
+        const comboHint = partner ? `<span class="combo-hint">🎁 combo com ${escapeHtml(partner.name)}: ${money(p.comboPrice)}/dia</span>` : '';
         return `
         <div class="checklist-item ${checked ? 'checked' : ''}" data-toggle="${p.id}">
           ${thumb}
           <div class="info">
             <strong>${escapeHtml(p.name)}</strong>
             <span>${money(p.price)} / dia</span>
+            ${comboHint}
           </div>
           <div class="checkbox-visual">${checked ? '✓' : ''}</div>
         </div>`;
@@ -464,18 +468,48 @@
     return state.products.filter((p) => state.selectedIds.has(p.id));
   }
 
+  // Groups selected products into combo pairs + single items, mirroring the
+  // server's order-independent pricing (lib/pricing.js): only products that
+  // declare comboPartnerId attempt to claim their partner first; everything
+  // left over is priced individually.
+  function groupForPricing(items) {
+    const selectedIds = new Set(items.map((p) => p.id));
+    const handled = new Set();
+    const groups = [];
+
+    items.forEach((p) => {
+      if (handled.has(p.id) || !p.comboPartnerId) return;
+      if (selectedIds.has(p.comboPartnerId) && !handled.has(p.comboPartnerId)) {
+        const partner = items.find((x) => x.id === p.comboPartnerId);
+        groups.push({ type: 'combo', names: [p.name, partner.name], price: Number(p.comboPrice) || 0 });
+        handled.add(p.id);
+        handled.add(p.comboPartnerId);
+      }
+    });
+
+    items.forEach((p) => {
+      if (handled.has(p.id)) return;
+      groups.push({ type: 'single', names: [p.name], price: p.price });
+      handled.add(p.id);
+    });
+
+    return groups;
+  }
+
   function computeTotals() {
     const items = getSelectedProducts();
     const days = state.days || 1;
-    const subtotal = Math.round(items.reduce((sum, p) => sum + p.price, 0) * days * 100) / 100;
+    const groups = groupForPricing(items);
+    const dailySubtotal = groups.reduce((sum, g) => sum + g.price, 0);
+    const subtotal = Math.round(dailySubtotal * days * 100) / 100;
     const km = state.distanceStatus === 'ok' ? state.distanceKm : 0;
     const travelFee = Math.round(km * state.pricePerKm * 100) / 100;
     const total = Math.round((subtotal + travelFee) * 100) / 100;
-    return { items, days, subtotal, km, travelFee, total };
+    return { items, groups, days, subtotal, km, travelFee, total };
   }
 
   function renderBudgetSummary() {
-    const { items, days, subtotal, km, travelFee, total } = computeTotals();
+    const { items, groups, days, subtotal, km, travelFee, total } = computeTotals();
 
     if (!items.length) {
       budgetEl.innerHTML = '<p class="budget-empty">Selecione ao menos um brinquedo para ver o valor.</p>';
@@ -504,7 +538,10 @@
       : '';
 
     budgetEl.innerHTML = `
-      ${items.map((p) => `<div class="budget-row item"><span>${escapeHtml(p.name)}${days > 1 ? ` (${money(p.price)}/dia)` : ''}</span><span>${money(p.price * days)}</span></div>`).join('')}
+      ${groups.map((g) => {
+        const label = g.type === 'combo' ? `${g.names.join(' + ')} (combo)` : g.names[0];
+        return `<div class="budget-row item"><span>${escapeHtml(label)}${days > 1 ? ` (${money(g.price)}/dia)` : ''}</span><span>${money(g.price * days)}</span></div>`;
+      }).join('')}
       ${periodLine}
       <div class="budget-row subtotal"><span>Subtotal</span><span>${money(subtotal)}</span></div>
       ${feeLine}
@@ -522,17 +559,18 @@
   }
 
   function updateWhatsAppLink() {
-    const { items, days, subtotal, km, travelFee, total } = computeTotals();
+    const { items, groups, days, subtotal, km, travelFee, total } = computeTotals();
     if (!items.length) return;
     const wa = String(state.settings.whatsapp || '').replace(/\D/g, '');
     const address = addressInput.value.trim();
 
     let msg = 'Olá! Gostaria de solicitar um orçamento para aluguel de brinquedos.\n\n';
     msg += 'Brinquedos selecionados:\n';
-    items.forEach((p) => {
+    groups.forEach((g) => {
+      const label = g.type === 'combo' ? `${g.names.join(' + ')} (combo)` : g.names[0];
       msg += days > 1
-        ? `- ${p.name} — ${money(p.price)}/dia × ${days} dias = ${money(p.price * days)}\n`
-        : `- ${p.name} — ${money(p.price)}\n`;
+        ? `- ${label} — ${money(g.price)}/dia × ${days} dias = ${money(g.price * days)}\n`
+        : `- ${label} — ${money(g.price)}\n`;
     });
     if (state.selectedDate) {
       msg += days > 1

@@ -123,7 +123,7 @@ router.get('/products', (req, res) => {
 
 router.post('/products', (req, res) => {
   const db = load();
-  const { name, description, price, capacity, size, minAge, icon, color, images } = req.body || {};
+  const { name, description, price, capacity, size, minAge, icon, color, images, comboPartnerId, comboPrice } = req.body || {};
   if (!name || !price) return res.status(400).json({ error: 'Nome e preço são obrigatórios.' });
   const product = {
     id: db.nextIds.product++,
@@ -136,6 +136,8 @@ router.post('/products', (req, res) => {
     icon: icon || 'bounce',
     color: color || '#ff6b6b',
     images: Array.isArray(images) ? images.map((s) => String(s).trim()).filter(Boolean) : [],
+    comboPartnerId: comboPartnerId ? Number(comboPartnerId) : null,
+    comboPrice: comboPrice ? Number(comboPrice) : null,
     active: true
   };
   db.products.push(product);
@@ -147,7 +149,7 @@ router.put('/products/:id', (req, res) => {
   const db = load();
   const product = db.products.find((p) => p.id === Number(req.params.id));
   if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
-  const { name, description, price, capacity, size, minAge, icon, color, images, active } = req.body || {};
+  const { name, description, price, capacity, size, minAge, icon, color, images, comboPartnerId, comboPrice, active } = req.body || {};
   if (name !== undefined) product.name = String(name).trim();
   if (description !== undefined) product.description = String(description).trim();
   if (price !== undefined) product.price = Number(price);
@@ -159,6 +161,8 @@ router.put('/products/:id', (req, res) => {
   if (images !== undefined) {
     product.images = Array.isArray(images) ? images.map((s) => String(s).trim()).filter(Boolean) : [];
   }
+  if (comboPartnerId !== undefined) product.comboPartnerId = comboPartnerId ? Number(comboPartnerId) : null;
+  if (comboPrice !== undefined) product.comboPrice = comboPrice ? Number(comboPrice) : null;
   if (active !== undefined) product.active = Boolean(active);
   save();
   res.json({ product });

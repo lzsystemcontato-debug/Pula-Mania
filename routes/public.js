@@ -2,6 +2,7 @@ const express = require('express');
 const { load, save } = require('../lib/db');
 const { getUnavailableDates, isDateAvailable, isRangeAvailable, addDays, todayStr } = require('../lib/availability');
 const { distanceBetweenAddresses } = require('../lib/geo');
+const { computeDailySubtotal } = require('../lib/pricing');
 
 const router = express.Router();
 
@@ -90,7 +91,7 @@ router.post('/bookings', (req, res) => {
 
   const endDate = addDays(eventDate, numDays - 1);
   const items = products.map((p) => ({ productId: p.id, name: p.name, price: p.price }));
-  const subtotal = Math.round(items.reduce((sum, i) => sum + i.price, 0) * numDays * 100) / 100;
+  const subtotal = Math.round(computeDailySubtotal(products) * numDays * 100) / 100;
   const km = Number(distanceKm) > 0 ? Number(distanceKm) : 0;
   const travelFee = Math.round(km * db.settings.pricePerKm * 100) / 100;
   const total = Math.round((subtotal + travelFee) * 100) / 100;

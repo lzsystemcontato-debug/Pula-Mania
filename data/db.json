@@ -2,33 +2,54 @@
   "products": [
     {
       "id": 1,
-      "name": "Cama Elástica Colorida",
-      "description": "Cama elástica com rede de proteção nas laterais e escada de acesso, ideal para festas infantis com total segurança.",
-      "price": 250,
+      "name": "Cama Elástica 1",
+      "description": "Cama elástica com rede de proteção nas laterais e escada de acesso, ideal para festas infantis com total segurança. Diária de até 5 horas.",
+      "price": 140,
       "capacity": 8,
-      "size": "4,20 m diâmetro",
+      "size": "3,5 m diâmetro",
       "minAge": 3,
       "icon": "bounce",
       "color": "#ff6b6b",
       "active": true,
       "images": [
         "/img/products/cama-elastica.jpg"
-      ]
+      ],
+      "comboPartnerId": 3,
+      "comboPrice": 200
     },
     {
       "id": 3,
       "name": "Piscina de Bolinhas",
-      "description": "Piscina de bolinhas coberta, com rede de proteção nas laterais, perfeita para os pequenos brincarem em segurança.",
-      "price": 200,
+      "description": "Piscina de bolinhas coberta, com rede de proteção nas laterais, perfeita para os pequenos brincarem em segurança. Diária de até 5 horas.",
+      "price": 100,
       "capacity": 6,
-      "size": "2x2 m",
+      "size": "1,5 m x 1,5 m",
       "minAge": 1,
       "icon": "balls",
       "color": "#4dd0e1",
       "active": true,
       "images": [
         "/img/products/piscina-bolinhas.jpg"
-      ]
+      ],
+      "comboPartnerId": null,
+      "comboPrice": null
+    },
+    {
+      "id": 6,
+      "name": "Cama Elástica 2",
+      "description": "Segunda unidade de cama elástica com rede de proteção nas laterais e escada de acesso, ideal para festas infantis com total segurança. Diária de até 5 horas.",
+      "price": 140,
+      "capacity": 8,
+      "size": "3,5 m diâmetro",
+      "minAge": 3,
+      "icon": "bounce",
+      "color": "#4968d4",
+      "active": true,
+      "images": [
+        "/img/products/cama-elastica.jpg"
+      ],
+      "comboPartnerId": 3,
+      "comboPrice": 200
     }
   ],
   "bookings": [
@@ -73,8 +94,8 @@
     "pricePerKm": 2
   },
   "nextIds": {
-    "product": 6,
-    "booking": 5,
+    "product": 7,
+    "booking": 6,
     "blockedDate": 4
   }
 }

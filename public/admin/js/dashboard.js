@@ -263,6 +263,7 @@
         <h4>${escapeHtml(p.name)}</h4>
         <div class="price">${money(p.price)}/dia</div>
         <div style="font-size:0.78rem;color:var(--gray)">${escapeHtml(p.size || '-')} · até ${p.capacity || '-'} crianças</div>
+        ${p.comboPartnerId ? `<div style="font-size:0.75rem;color:var(--green);font-weight:700;">🎁 combo: ${money(p.comboPrice)}/dia</div>` : ''}
         ${!p.active ? '<div class="inactive-tag">Inativo (oculto no site)</div>' : ''}
         <div class="card-actions">
           <button class="btn btn-outline btn-sm" data-edit="${p.id}">Editar</button>
@@ -312,6 +313,13 @@
       .filter(Boolean);
   }
 
+  function renderComboPartnerOptions(id) {
+    const select = document.getElementById('pf-combo-partner');
+    const options = state.products.filter((x) => x.id !== id);
+    select.innerHTML = '<option value="">Nenhum</option>' +
+      options.map((x) => `<option value="${x.id}">${escapeHtml(x.name)}</option>`).join('');
+  }
+
   function openProductModal(id) {
     const modal = document.getElementById('product-modal');
     const isEdit = !!id;
@@ -325,6 +333,9 @@
     document.getElementById('pf-size').value = p ? p.size || '' : '';
     document.getElementById('pf-minAge').value = p ? p.minAge || '' : '';
     renderImageRows(p ? p.images : []);
+    renderComboPartnerOptions(id || null);
+    document.getElementById('pf-combo-partner').value = p && p.comboPartnerId ? String(p.comboPartnerId) : '';
+    document.getElementById('pf-combo-price').value = p && p.comboPrice ? p.comboPrice : '';
     document.getElementById('pf-icon').value = p ? p.icon : 'bounce';
     document.getElementById('pf-color').value = p ? p.color : '#ff6b6b';
     document.getElementById('pf-active').checked = p ? p.active : true;
@@ -344,6 +355,8 @@
       size: document.getElementById('pf-size').value.trim(),
       minAge: Number(document.getElementById('pf-minAge').value) || null,
       images: collectImages(),
+      comboPartnerId: document.getElementById('pf-combo-partner').value || null,
+      comboPrice: Number(document.getElementById('pf-combo-price').value) || null,
       icon: document.getElementById('pf-icon').value,
       color: document.getElementById('pf-color').value,
       active: document.getElementById('pf-active').checked

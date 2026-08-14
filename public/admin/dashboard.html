@@ -166,6 +166,18 @@
         <div style="flex:1"><label>Tamanho</label><input id="pf-size" type="text" placeholder="Ex: 4x4 m" /></div>
         <div style="flex:1"><label>Idade mínima</label><input id="pf-minAge" type="number" min="0" /></div>
       </div>
+      <div class="field" style="display:flex; gap:12px;">
+        <div style="flex:1">
+          <label>Combina em combo com</label>
+          <select id="pf-combo-partner">
+            <option value="">Nenhum</option>
+          </select>
+        </div>
+        <div style="flex:1"><label>Preço do combo (R$/dia)</label><input id="pf-combo-price" type="number" step="0.01" min="0" placeholder="Ex: 200" /></div>
+      </div>
+      <small style="color:var(--gray); font-size:0.75rem; display:block; margin: -8px 0 12px;">
+        Se o cliente marcar este brinquedo junto com o parceiro escolhido, o preço dos dois juntos vira o valor do combo (em vez de somar os preços individuais).
+      </small>
       <div class="field">
         <label>Fotos</label>
         <div id="pf-images-list" class="image-list"></div>

@@ -566,6 +566,7 @@ section { padding: 64px 0; }
 .checklist-item .info { flex: 1; min-width: 0; }
 .checklist-item .info strong { display: block; font-size: 0.92rem; }
 .checklist-item .info span { color: var(--gray); font-size: 0.8rem; }
+.checklist-item .info .combo-hint { display: block; color: var(--green); font-weight: 700; margin-top: 2px; }
 
 .checklist-item .checkbox-visual {
   width: 22px;
