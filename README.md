@@ -18,7 +18,9 @@ O site abre em `http://localhost:3000` e o painel administrativo em `http://loca
 - `server.js` — servidor Express
 - `routes/public.js` — API pública (produtos, disponibilidade, criação de reserva)
 - `routes/admin.js` — API do painel admin (login, reservas, produtos, bloqueio de datas, configurações)
-- `lib/db.js` — banco de dados simples em arquivo JSON (`data/db.json`, criado automaticamente)
+- `lib/db.js` — persistência de dados: usa PostgreSQL quando a variável de ambiente `DATABASE_URL` está definida
+  (produção); caso contrário, usa um arquivo JSON local (`data/db.json`) como alternativa simples para rodar sem
+  banco de dados durante o desenvolvimento.
 - `public/` — site público (HTML/CSS/JS puro)
 - `public/admin/` — painel administrativo
 
@@ -56,14 +58,12 @@ git remote add origin https://github.com/SEU-USUARIO/pula-mania.git
 git push -u origin main
 ```
 
-### Atenção: dados no plano gratuito do Render
+### Banco de dados (PostgreSQL)
 
-Este projeto guarda reservas e produtos em um arquivo (`data/db.json`) no próprio servidor. No plano gratuito do
-Render, o disco **não é permanente entre deploys** — ou seja, se você publicar uma atualização do código, os dados
-salvos (reservas feitas pelos clientes, alterações no painel) podem ser perdidos. Para uso sério, considere:
+O `render.yaml` já provisiona um banco PostgreSQL gratuito (`pula-mania-postgres`) e conecta automaticamente o
+site a ele via a variável `DATABASE_URL` — não é preciso configurar nada manualmente ao publicar com o Blueprint.
+Com isso, reservas e alterações no painel **não são mais perdidas** quando uma nova versão do código é publicada.
 
-- Ativar um "Persistent Disk" no Render (plano pago), ou
-- Migrar para um banco de dados externo no futuro (ex: banco gratuito do Render/Railway).
-
-Por enquanto, para começar a usar e validar o site, isso não é um bloqueio — apenas evite publicar novas alterações
-de código com frequência sem antes anotar/exportar as reservas importantes.
+**Atenção:** o plano gratuito de PostgreSQL do Render expira 30 dias após a criação e o banco é apagado depois
+disso, a não ser que você faça upgrade para um plano pago (a partir de ~US$6-7/mês) antes do vencimento. Acompanhe
+a data de expiração no painel do Render (Dashboard → banco `pula-mania-postgres` → Info).

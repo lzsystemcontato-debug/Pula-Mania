@@ -7,30 +7,30 @@ const { computeDailySubtotal } = require('../lib/pricing');
 const router = express.Router();
 
 // GET /api/settings
-router.get('/settings', (req, res) => {
-  const db = load();
+router.get('/settings', async (req, res) => {
+  const db = await load();
   // don't leak the internal price-per-km / origin address needed only for calc consistency,
   // but they're needed by the public booking form to show the rate — safe to expose.
   res.json(db.settings);
 });
 
 // GET /api/products - list active products
-router.get('/products', (req, res) => {
-  const db = load();
+router.get('/products', async (req, res) => {
+  const db = await load();
   res.json(db.products.filter((p) => p.active));
 });
 
 // GET /api/products/:id
-router.get('/products/:id', (req, res) => {
-  const db = load();
+router.get('/products/:id', async (req, res) => {
+  const db = await load();
   const product = db.products.find((p) => p.id === Number(req.params.id));
   if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
   res.json(product);
 });
 
 // GET /api/availability?productIds=1,2,3&year=2026&month=8
-router.get('/availability', (req, res) => {
-  const db = load();
+router.get('/availability', async (req, res) => {
+  const db = await load();
   const productIds = String(req.query.productIds || req.query.productId || '')
     .split(',')
     .map((s) => Number(s.trim()))
@@ -46,7 +46,7 @@ router.get('/availability', (req, res) => {
 
 // POST /api/distance - { address } -> { km }
 router.post('/distance', async (req, res) => {
-  const db = load();
+  const db = await load();
   const { address } = req.body || {};
   if (!address || !String(address).trim()) {
     return res.status(400).json({ error: 'Informe o endereço do evento.' });
@@ -65,8 +65,8 @@ router.post('/distance', async (req, res) => {
 });
 
 // POST /api/bookings - create a booking request with one or more products
-router.post('/bookings', (req, res) => {
-  const db = load();
+router.post('/bookings', async (req, res) => {
+  const db = await load();
   const { productIds, customerName, phone, email, eventDate, address, notes, distanceKm, days } = req.body || {};
 
   const ids = Array.isArray(productIds) ? productIds.map(Number).filter(Boolean) : [];
@@ -116,7 +116,7 @@ router.post('/bookings', (req, res) => {
   };
 
   db.bookings.push(booking);
-  save();
+  await save(db);
 
   res.status(201).json({ booking });
 });

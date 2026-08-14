@@ -10,8 +10,8 @@ function requireAuth(req, res, next) {
 
 // ---- Auth ----
 
-router.post('/auth/login', (req, res) => {
-  const db = load();
+router.post('/auth/login', async (req, res) => {
+  const db = await load();
   const { username, password } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ error: 'Informe usuário e senha.' });
@@ -38,8 +38,8 @@ router.get('/auth/me', (req, res) => {
   res.json({ authenticated: false });
 });
 
-router.post('/auth/change-password', requireAuth, (req, res) => {
-  const db = load();
+router.post('/auth/change-password', requireAuth, async (req, res) => {
+  const db = await load();
   const { currentPassword, newPassword } = req.body || {};
   if (!currentPassword || !newPassword || newPassword.length < 6) {
     return res.status(400).json({ error: 'Senha atual e nova senha (mín. 6 caracteres) são obrigatórias.' });
@@ -51,7 +51,7 @@ router.post('/auth/change-password', requireAuth, (req, res) => {
   const { salt, hash } = hashPassword(newPassword);
   admin.salt = salt;
   admin.hash = hash;
-  save();
+  await save(db);
   res.json({ ok: true });
 });
 
@@ -60,8 +60,8 @@ router.use(requireAuth);
 
 // ---- Dashboard stats ----
 
-router.get('/stats', (req, res) => {
-  const db = load();
+router.get('/stats', async (req, res) => {
+  const db = await load();
   const today = new Date().toISOString().slice(0, 10);
   const in7 = new Date();
   in7.setDate(in7.getDate() + 7);
@@ -79,8 +79,8 @@ router.get('/stats', (req, res) => {
 
 // ---- Bookings ----
 
-router.get('/bookings', (req, res) => {
-  const db = load();
+router.get('/bookings', async (req, res) => {
+  const db = await load();
   let list = [...db.bookings];
   const { status, from, to } = req.query;
   if (status) list = list.filter((b) => b.status === status);
@@ -90,8 +90,8 @@ router.get('/bookings', (req, res) => {
   res.json(list);
 });
 
-router.patch('/bookings/:id', (req, res) => {
-  const db = load();
+router.patch('/bookings/:id', async (req, res) => {
+  const db = await load();
   const booking = db.bookings.find((b) => b.id === Number(req.params.id));
   if (!booking) return res.status(404).json({ error: 'Reserva não encontrada.' });
   const { status, notes } = req.body || {};
@@ -101,28 +101,28 @@ router.patch('/bookings/:id', (req, res) => {
     booking.status = status;
   }
   if (typeof notes === 'string') booking.notes = notes;
-  save();
+  await save(db);
   res.json({ booking });
 });
 
-router.delete('/bookings/:id', (req, res) => {
-  const db = load();
+router.delete('/bookings/:id', async (req, res) => {
+  const db = await load();
   const idx = db.bookings.findIndex((b) => b.id === Number(req.params.id));
   if (idx === -1) return res.status(404).json({ error: 'Reserva não encontrada.' });
   db.bookings.splice(idx, 1);
-  save();
+  await save(db);
   res.json({ ok: true });
 });
 
 // ---- Products ----
 
-router.get('/products', (req, res) => {
-  const db = load();
+router.get('/products', async (req, res) => {
+  const db = await load();
   res.json(db.products);
 });
 
-router.post('/products', (req, res) => {
-  const db = load();
+router.post('/products', async (req, res) => {
+  const db = await load();
   const { name, description, price, capacity, size, minAge, icon, color, images, comboPartnerId, comboPrice } = req.body || {};
   if (!name || !price) return res.status(400).json({ error: 'Nome e preço são obrigatórios.' });
   const product = {
@@ -141,12 +141,12 @@ router.post('/products', (req, res) => {
     active: true
   };
   db.products.push(product);
-  save();
+  await save(db);
   res.status(201).json({ product });
 });
 
-router.put('/products/:id', (req, res) => {
-  const db = load();
+router.put('/products/:id', async (req, res) => {
+  const db = await load();
   const product = db.products.find((p) => p.id === Number(req.params.id));
   if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
   const { name, description, price, capacity, size, minAge, icon, color, images, comboPartnerId, comboPrice, active } = req.body || {};
@@ -164,28 +164,28 @@ router.put('/products/:id', (req, res) => {
   if (comboPartnerId !== undefined) product.comboPartnerId = comboPartnerId ? Number(comboPartnerId) : null;
   if (comboPrice !== undefined) product.comboPrice = comboPrice ? Number(comboPrice) : null;
   if (active !== undefined) product.active = Boolean(active);
-  save();
+  await save(db);
   res.json({ product });
 });
 
-router.delete('/products/:id', (req, res) => {
-  const db = load();
+router.delete('/products/:id', async (req, res) => {
+  const db = await load();
   const idx = db.products.findIndex((p) => p.id === Number(req.params.id));
   if (idx === -1) return res.status(404).json({ error: 'Produto não encontrado.' });
   db.products.splice(idx, 1);
-  save();
+  await save(db);
   res.json({ ok: true });
 });
 
 // ---- Blocked dates ----
 
-router.get('/blocked-dates', (req, res) => {
-  const db = load();
+router.get('/blocked-dates', async (req, res) => {
+  const db = await load();
   res.json([...db.blockedDates].sort((a, b) => (a.date < b.date ? -1 : 1)));
 });
 
-router.post('/blocked-dates', (req, res) => {
-  const db = load();
+router.post('/blocked-dates', async (req, res) => {
+  const db = await load();
   const { date, reason } = req.body || {};
   if (!date) return res.status(400).json({ error: 'Data é obrigatória.' });
   if (db.blockedDates.some((b) => b.date === date)) {
@@ -193,23 +193,23 @@ router.post('/blocked-dates', (req, res) => {
   }
   const blocked = { id: db.nextIds.blockedDate++, date, reason: reason || '' };
   db.blockedDates.push(blocked);
-  save();
+  await save(db);
   res.status(201).json({ blocked });
 });
 
-router.delete('/blocked-dates/:id', (req, res) => {
-  const db = load();
+router.delete('/blocked-dates/:id', async (req, res) => {
+  const db = await load();
   const idx = db.blockedDates.findIndex((b) => b.id === Number(req.params.id));
   if (idx === -1) return res.status(404).json({ error: 'Bloqueio não encontrado.' });
   db.blockedDates.splice(idx, 1);
-  save();
+  await save(db);
   res.json({ ok: true });
 });
 
 // ---- Settings ----
 
-router.put('/settings', (req, res) => {
-  const db = load();
+router.put('/settings', async (req, res) => {
+  const db = await load();
   const { companyName, whatsapp, email, city, instagram, address, pricePerKm } = req.body || {};
   if (companyName !== undefined) db.settings.companyName = companyName;
   if (whatsapp !== undefined) db.settings.whatsapp = whatsapp;
@@ -218,7 +218,7 @@ router.put('/settings', (req, res) => {
   if (instagram !== undefined) db.settings.instagram = instagram;
   if (address !== undefined) db.settings.address = address;
   if (pricePerKm !== undefined) db.settings.pricePerKm = Number(pricePerKm) || 0;
-  save();
+  await save(db);
   res.json({ settings: db.settings });
 });
 
