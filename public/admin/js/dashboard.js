@@ -261,9 +261,9 @@
           ${p.images && p.images.length > 1 ? `<span class="swatch-badge">📷 ${p.images.length}</span>` : ''}
         </div>
         <h4>${escapeHtml(p.name)}</h4>
-        <div class="price">${money(p.price)}/dia</div>
+        <div class="price">${money(p.price)}/diária (5h)</div>
         <div style="font-size:0.78rem;color:var(--gray)">${escapeHtml(p.size || '-')} · até ${p.capacity || '-'} crianças</div>
-        ${p.comboPartnerId ? `<div style="font-size:0.75rem;color:var(--green);font-weight:700;">🎁 combo: ${money(p.comboPrice)}/dia</div>` : ''}
+        ${p.comboPartnerId ? `<div style="font-size:0.75rem;color:var(--green);font-weight:700;">🎁 combo: ${money(p.comboPrice)}/diária</div>` : ''}
         ${!p.active ? '<div class="inactive-tag">Inativo (oculto no site)</div>' : ''}
         <div class="card-actions">
           <button class="btn btn-outline btn-sm" data-edit="${p.id}">Editar</button>

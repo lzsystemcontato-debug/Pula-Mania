@@ -153,7 +153,7 @@
             <span>🎂 ${p.minAge || 0}+ anos</span>
             <span>⏱ até 5h por diária</span>
           </div>
-          <div class="product-price"><span class="price-value">${money(p.price)}</span> <small>/ dia</small></div>
+          <div class="product-price"><span class="price-value">${money(p.price)}</span> <small>/ diária (5h)</small></div>
           <button class="btn btn-primary btn-block btn-sm" data-select="${p.id}">Agendar este brinquedo</button>
         </div>
       </div>
@@ -189,13 +189,13 @@
         const checked = state.selectedIds.has(p.id);
         const thumb = p.images && p.images.length ? `<img class="thumb" src="${p.images[0]}" alt="" />` : `<div class="thumb"></div>`;
         const partner = p.comboPartnerId ? state.products.find((x) => x.id === p.comboPartnerId) : null;
-        const comboHint = partner ? `<span class="combo-hint">🎁 combo com ${escapeHtml(partner.name)}: ${money(p.comboPrice)}/dia</span>` : '';
+        const comboHint = partner ? `<span class="combo-hint">🎁 combo com ${escapeHtml(partner.name)}: ${money(p.comboPrice)}/diária</span>` : '';
         return `
         <div class="checklist-item ${checked ? 'checked' : ''}" data-toggle="${p.id}">
           ${thumb}
           <div class="info">
             <strong>${escapeHtml(p.name)}</strong>
-            <span>${money(p.price)} / dia</span>
+            <span>${money(p.price)} / diária (5h)</span>
             ${comboHint}
           </div>
           <div class="checkbox-visual">${checked ? '✓' : ''}</div>
@@ -534,13 +534,13 @@
     }
 
     const periodLine = days > 1
-      ? `<div class="budget-row item"><span>Diárias</span><span>${days} dias</span></div>`
+      ? `<div class="budget-row item"><span>Diárias (5h cada)</span><span>${days}</span></div>`
       : '';
 
     budgetEl.innerHTML = `
       ${groups.map((g) => {
         const label = g.type === 'combo' ? `${g.names.join(' + ')} (combo)` : g.names[0];
-        return `<div class="budget-row item"><span>${escapeHtml(label)}${days > 1 ? ` (${money(g.price)}/dia)` : ''}</span><span>${money(g.price * days)}</span></div>`;
+        return `<div class="budget-row item"><span>${escapeHtml(label)}${days > 1 ? ` (${money(g.price)}/diária)` : ''}</span><span>${money(g.price * days)}</span></div>`;
       }).join('')}
       ${periodLine}
       <div class="budget-row subtotal"><span>Subtotal</span><span>${money(subtotal)}</span></div>
@@ -569,8 +569,8 @@
     groups.forEach((g) => {
       const label = g.type === 'combo' ? `${g.names.join(' + ')} (combo)` : g.names[0];
       msg += days > 1
-        ? `- ${label} — ${money(g.price)}/dia × ${days} dias = ${money(g.price * days)}\n`
-        : `- ${label} — ${money(g.price)}\n`;
+        ? `- ${label} — ${money(g.price)}/diária (5h) × ${days} diárias = ${money(g.price * days)}\n`
+        : `- ${label} — ${money(g.price)} (diária de até 5h)\n`;
     });
     if (state.selectedDate) {
       msg += days > 1
