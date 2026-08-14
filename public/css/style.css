@@ -1,11 +1,11 @@
 :root {
-  --pink: #ff3d68;
-  --purple: #9d4edd;
-  --cyan: #00c2d1;
-  --orange: #ff8c00;
-  --yellow: #ffc233;
-  --green: #00c896;
-  --dark: #1f2937;
+  --pink: #f2529c;
+  --purple: #4968d4;
+  --cyan: #29abe2;
+  --orange: #ff8a3d;
+  --yellow: #ffce1f;
+  --green: #4cb848;
+  --dark: #24384a;
   --gray: #6b7280;
   --gray-light: #f3f4f6;
   --border: #e5e7eb;
@@ -133,9 +133,9 @@ nav.main-nav a:hover { color: var(--pink); }
 .btn:hover { transform: translateY(-2px); }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--pink), #ff8e53);
+  background: linear-gradient(135deg, var(--pink), var(--orange));
   color: white;
-  box-shadow: 0 8px 20px rgba(255, 107, 107, 0.35);
+  box-shadow: 0 8px 20px rgba(242, 82, 156, 0.35);
 }
 
 .btn-whatsapp {
@@ -156,23 +156,23 @@ nav.main-nav a:hover { color: var(--pink); }
 /* ---------- Hero ---------- */
 
 .hero {
-  background: radial-gradient(circle at 15% 20%, rgba(255, 61, 104, 0.30), transparent 45%),
-    radial-gradient(circle at 85% 10%, rgba(157, 78, 221, 0.30), transparent 42%),
-    radial-gradient(circle at 60% 90%, rgba(0, 194, 209, 0.26), transparent 45%),
-    radial-gradient(circle at 5% 80%, rgba(255, 194, 51, 0.22), transparent 40%);
+  background: radial-gradient(circle at 15% 20%, rgba(242, 82, 156, 0.30), transparent 45%),
+    radial-gradient(circle at 85% 10%, rgba(73, 104, 212, 0.30), transparent 42%),
+    radial-gradient(circle at 60% 90%, rgba(41, 171, 226, 0.26), transparent 45%),
+    radial-gradient(circle at 5% 80%, rgba(255, 206, 31, 0.22), transparent 40%);
   padding: 72px 0 56px;
 }
 
 .reservar-section {
-  background: radial-gradient(circle at 85% 15%, rgba(0, 200, 150, 0.24), transparent 45%),
-    radial-gradient(circle at 10% 85%, rgba(255, 140, 0, 0.26), transparent 45%),
-    radial-gradient(circle at 50% 0%, rgba(255, 61, 104, 0.18), transparent 40%),
-    radial-gradient(circle at 95% 95%, rgba(157, 78, 221, 0.18), transparent 40%);
+  background: radial-gradient(circle at 85% 15%, rgba(76, 184, 72, 0.24), transparent 45%),
+    radial-gradient(circle at 10% 85%, rgba(255, 138, 61, 0.26), transparent 45%),
+    radial-gradient(circle at 50% 0%, rgba(242, 82, 156, 0.18), transparent 40%),
+    radial-gradient(circle at 95% 95%, rgba(73, 104, 212, 0.18), transparent 40%);
 }
 
 .catalog-section {
-  background: radial-gradient(circle at 90% 0%, rgba(255, 194, 51, 0.16), transparent 40%),
-    radial-gradient(circle at 5% 100%, rgba(0, 194, 209, 0.16), transparent 42%);
+  background: radial-gradient(circle at 90% 0%, rgba(255, 206, 31, 0.16), transparent 40%),
+    radial-gradient(circle at 5% 100%, rgba(41, 171, 226, 0.16), transparent 42%);
 }
 
 .how-section {

@@ -1,11 +1,11 @@
 :root {
-  --pink: #ff3d68;
-  --purple: #9d4edd;
-  --cyan: #00c2d1;
-  --orange: #ff8c00;
-  --green: #00c896;
+  --pink: #f2529c;
+  --purple: #4968d4;
+  --cyan: #29abe2;
+  --orange: #ff8a3d;
+  --green: #4cb848;
   --red: #ef4444;
-  --dark: #1f2937;
+  --dark: #24384a;
   --gray: #6b7280;
   --gray-light: #f3f4f6;
   --border: #e5e7eb;
@@ -28,8 +28,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 20% 20%, rgba(255,107,107,0.15), transparent 45%),
-    radial-gradient(circle at 80% 80%, rgba(192,132,252,0.15), transparent 45%), #fffdf9;
+  background: radial-gradient(circle at 20% 20%, rgba(242,82,156,0.15), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(73,104,212,0.15), transparent 45%), #fffdf9;
   padding: 20px;
 }
 
@@ -82,7 +82,7 @@ body {
   transition: transform 0.1s ease;
 }
 .btn:hover { transform: translateY(-1px); }
-.btn-primary { background: linear-gradient(135deg, var(--pink), #ff8e53); color: white; }
+.btn-primary { background: linear-gradient(135deg, var(--pink), var(--orange)); color: white; }
 .btn-block { width: 100%; }
 .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--dark); }
 .btn-danger { background: #fee2e2; color: var(--red); }
