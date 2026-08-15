@@ -1,2 +1,8 @@
 node_modules/
 .claude/
+
+# Firebase service account credentials — never commit these
+*firebase*adminsdk*.json
+serviceAccountKey.json
+.env
+.env.*

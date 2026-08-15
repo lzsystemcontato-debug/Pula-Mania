@@ -18,9 +18,9 @@ O site abre em `http://localhost:3000` e o painel administrativo em `http://loca
 - `server.js` — servidor Express
 - `routes/public.js` — API pública (produtos, disponibilidade, criação de reserva)
 - `routes/admin.js` — API do painel admin (login, reservas, produtos, bloqueio de datas, configurações)
-- `lib/db.js` — persistência de dados: usa PostgreSQL quando a variável de ambiente `DATABASE_URL` está definida
-  (produção); caso contrário, usa um arquivo JSON local (`data/db.json`) como alternativa simples para rodar sem
-  banco de dados durante o desenvolvimento.
+- `lib/db.js` — persistência de dados: usa Firestore (Firebase) quando a variável de ambiente `FIREBASE_SERVICE_ACCOUNT`
+  (ou `GOOGLE_APPLICATION_CREDENTIALS`) está definida (produção); caso contrário, usa um arquivo JSON local
+  (`data/db.json`) como alternativa simples para rodar sem banco de dados durante o desenvolvimento.
 - `public/` — site público (HTML/CSS/JS puro)
 - `public/admin/` — painel administrativo
 
@@ -58,12 +58,22 @@ git remote add origin https://github.com/SEU-USUARIO/pula-mania.git
 git push -u origin main
 ```
 
-### Banco de dados (PostgreSQL)
+### Banco de dados (Firestore / Firebase)
 
-O `render.yaml` já provisiona um banco PostgreSQL gratuito (`pula-mania-postgres`) e conecta automaticamente o
-site a ele via a variável `DATABASE_URL` — não é preciso configurar nada manualmente ao publicar com o Blueprint.
-Com isso, reservas e alterações no painel **não são mais perdidas** quando uma nova versão do código é publicada.
+O site usa o **Firestore** (banco do Firebase) para persistir produtos, reservas e configurações em produção. Sem
+isso configurado, roda com um arquivo JSON local (`data/db.json`), que é apagado a cada novo deploy no Render.
 
-**Atenção:** o plano gratuito de PostgreSQL do Render expira 30 dias após a criação e o banco é apagado depois
-disso, a não ser que você faça upgrade para um plano pago (a partir de ~US$6-7/mês) antes do vencimento. Acompanhe
-a data de expiração no painel do Render (Dashboard → banco `pula-mania-postgres` → Info).
+**Configurar (uma vez só):**
+
+1. No [Console do Firebase](https://console.firebase.google.com), abra o projeto (ex: `Pula Mania`) → **Compilação**
+   → **Firestore Database** → **Criar banco de dados** (escolha uma localização, ex: `southamerica-east1`, e modo
+   de produção).
+2. Vá em **Configurações do projeto** (ícone de engrenagem) → **Contas de serviço** → **Gerar nova chave privada**.
+   Isso baixa um arquivo `.json` — **guarde-o em local seguro, nunca comite no git**.
+3. No painel do Render (Dashboard → serviço `pula-mania` → **Environment**), adicione a variável de ambiente
+   `FIREBASE_SERVICE_ACCOUNT` colando **o conteúdo inteiro** desse arquivo `.json` (como uma única string).
+4. Rode `npm install` (adiciona o pacote `firebase-admin`) e faça o deploy. O `render.yaml` já declara essa variável
+   (sem valor — você preenche manualmente pelo painel, pois é um segredo).
+
+Para rodar localmente com Firestore, defina a mesma variável `FIREBASE_SERVICE_ACCOUNT` no seu ambiente (ou aponte
+`GOOGLE_APPLICATION_CREDENTIALS` para o caminho do arquivo `.json` baixado) antes de `npm start`.
