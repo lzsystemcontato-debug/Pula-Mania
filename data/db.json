@@ -52,32 +52,7 @@
       "comboPrice": 200
     }
   ],
-  "bookings": [
-    {
-      "id": 2,
-      "customerName": "Laisa",
-      "phone": "16997715568",
-      "email": "Laisalemes17@gmail.com",
-      "eventDate": "2026-08-22",
-      "address": "Rua Martim Afonso de Souza",
-      "notes": "Festa para uma criança de 2 anos",
-      "status": "pending",
-      "createdAt": "2026-08-10T23:34:14.320Z",
-      "items": [
-        {
-          "productId": 1,
-          "name": "Cama Elástica Colorida 4x4m",
-          "price": 250
-        }
-      ],
-      "subtotal": 250,
-      "distanceKm": 0,
-      "travelFee": 0,
-      "total": 250,
-      "days": 1,
-      "endDate": "2026-08-22"
-    }
-  ],
+  "bookings": [],
   "blockedDates": [],
   "admin": {
     "username": "admin",
@@ -95,7 +70,7 @@
   },
   "nextIds": {
     "product": 7,
-    "booking": 6,
+    "booking": 1,
     "blockedDate": 5
   }
 }

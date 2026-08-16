@@ -24,6 +24,22 @@
     return `${fmtDateBR(b.eventDate)} a ${fmtDateBR(end)} (${b.days || 1}d)`;
   }
 
+  // Opens WhatsApp to the customer's own phone (saved on the booking) with a
+  // confirmation message — used right after an admin marks a booking as
+  // "Confirmado", so the customer is notified without the business having to
+  // retype the number.
+  function openConfirmationWhatsApp(b) {
+    const wa = String(b.phone || '').replace(/\D/g, '');
+    if (!wa) return;
+    let msg = `Olá, ${b.customerName}! ✅\n\n`;
+    msg += `Seu pedido foi CONFIRMADO:\n`;
+    msg += `${itemNames(b)}\n`;
+    msg += `Período: ${periodLabel(b)}\n`;
+    msg += `Total: ${money(b.total)}\n\n`;
+    msg += `Qualquer dúvida, estamos à disposição!`;
+    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
   async function api(url, options) {
     const res = await fetch(url, {
       headers: { 'Content-Type': 'application/json' },
@@ -167,6 +183,10 @@
             await api(`/api/admin/bookings/${id}`, { method: 'DELETE' });
           } else {
             await api(`/api/admin/bookings/${id}`, { method: 'PATCH', body: JSON.stringify({ status: action }) });
+            if (action === 'confirmed') {
+              const booking = state.bookings.find((x) => x.id === Number(id));
+              if (booking) openConfirmationWhatsApp(booking);
+            }
           }
           await loadBookings();
           loadOverview();

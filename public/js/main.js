@@ -39,9 +39,14 @@
   const daysInput = document.getElementById('f-days');
   const rangeStatusEl = document.getElementById('range-status');
   const addressInput = document.getElementById('f-address');
+  const cepInput = document.getElementById('f-cep');
+  const streetInput = document.getElementById('f-street');
+  const numberInput = document.getElementById('f-number');
+  const neighborhoodInput = document.getElementById('f-neighborhood');
+  const cityInput = document.getElementById('f-city');
+  const cepStatusEl = document.getElementById('cep-status');
   const distanceStatusEl = document.getElementById('distance-status');
   const budgetEl = document.getElementById('budget-summary');
-  const whatsappBtn = document.getElementById('whatsapp-budget-btn');
   const feedbackEl = document.getElementById('booking-feedback');
   const form = document.getElementById('booking-form');
 
@@ -397,14 +402,39 @@
     }
   }
 
+  // ---------- Address (CEP + structured fields) ----------
+
+  // Combines the structured fields into the single address string the rest
+  // of the app (distance calc, booking payload, WhatsApp message) expects.
+  // CEP is optional and never required to compose a usable address — useful
+  // for sítios/chácaras/áreas de lazer that don't have one.
+  function composeAddress() {
+    const street = streetInput.value.trim();
+    const number = numberInput.value.trim();
+    const neighborhood = neighborhoodInput.value.trim();
+    const city = cityInput.value.trim();
+    const cep = cepInput.value.trim();
+
+    let line1 = street;
+    if (number) line1 += (line1 ? ', ' : '') + number;
+    if (neighborhood) line1 += (line1 ? ' - ' : '') + neighborhood;
+
+    const parts = [line1, city].filter(Boolean);
+    if (cep) parts.push(`CEP ${cep}`);
+
+    const composed = parts.join(', ');
+    addressInput.value = composed;
+    return composed;
+  }
+
   // ---------- Distance / travel fee ----------
 
   let distanceTimer = null;
   let distanceRequestId = 0;
 
-  addressInput.addEventListener('input', () => {
+  function handleAddressFieldChange() {
     clearTimeout(distanceTimer);
-    const value = addressInput.value.trim();
+    const value = composeAddress();
     if (value.length < 8) {
       state.distanceStatus = 'idle';
       state.distanceKm = null;
@@ -413,7 +443,57 @@
       return;
     }
     distanceTimer = setTimeout(() => computeDistance(value), 900);
+  }
+
+  [streetInput, numberInput, neighborhoodInput, cityInput].forEach((el) => {
+    el.addEventListener('input', handleAddressFieldChange);
   });
+
+  // ---------- CEP autofill (ViaCEP) ----------
+
+  function formatCep(digits) {
+    return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5, 8)}` : digits;
+  }
+
+  cepInput.addEventListener('input', () => {
+    const digits = cepInput.value.replace(/\D/g, '').slice(0, 8);
+    cepInput.value = formatCep(digits);
+    if (digits.length < 8) {
+      cepStatusEl.className = 'distance-status';
+      cepStatusEl.textContent = '';
+      handleAddressFieldChange();
+      return;
+    }
+    lookupCep(digits);
+  });
+
+  let cepRequestId = 0;
+
+  async function lookupCep(digits) {
+    const myRequestId = ++cepRequestId;
+    cepStatusEl.className = 'distance-status loading';
+    cepStatusEl.textContent = 'Buscando endereço pelo CEP...';
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (myRequestId !== cepRequestId) return; // stale response
+      if (data.erro) {
+        cepStatusEl.className = 'distance-status error';
+        cepStatusEl.textContent = 'CEP não encontrado. Preencha o endereço manualmente.';
+        return;
+      }
+      if (data.logradouro) streetInput.value = data.logradouro;
+      if (data.bairro) neighborhoodInput.value = data.bairro;
+      if (data.localidade) cityInput.value = data.localidade;
+      cepStatusEl.className = 'distance-status ok';
+      cepStatusEl.textContent = '📍 Endereço preenchido automaticamente — confira e edite se precisar.';
+      handleAddressFieldChange();
+    } catch (e) {
+      if (myRequestId !== cepRequestId) return;
+      cepStatusEl.className = 'distance-status error';
+      cepStatusEl.textContent = 'Não foi possível buscar o CEP. Preencha o endereço manualmente.';
+    }
+  }
 
   async function computeDistance(address) {
     const myRequestId = ++distanceRequestId;
@@ -513,14 +593,9 @@
 
     if (!items.length) {
       budgetEl.innerHTML = '<p class="budget-empty">Selecione ao menos um brinquedo para ver o valor.</p>';
-      whatsappBtn.style.pointerEvents = 'none';
-      whatsappBtn.style.opacity = '0.5';
       setSubmitEnabled(false);
       return;
     }
-
-    whatsappBtn.style.pointerEvents = '';
-    whatsappBtn.style.opacity = '';
 
     let feeLine = '';
     if (state.distanceStatus === 'ok') {
@@ -549,7 +624,6 @@
     `;
 
     setSubmitEnabled(state.rangeStatus !== 'error');
-    updateWhatsAppLink();
   }
 
   function setSubmitEnabled(enabled) {
@@ -558,13 +632,18 @@
     submitBtn.style.opacity = enabled ? '' : '0.5';
   }
 
-  function updateWhatsAppLink() {
+  // Builds the wa.me link with the full order summary — used right after a
+  // booking is successfully created, so the customer lands on WhatsApp with
+  // every detail already filled in (single unified "finish order" action).
+  function buildWhatsAppUrl(customerName) {
     const { items, groups, days, subtotal, km, travelFee, total } = computeTotals();
-    if (!items.length) return;
+    if (!items.length) return null;
     const wa = String(state.settings.whatsapp || '').replace(/\D/g, '');
+    if (!wa) return null;
     const address = addressInput.value.trim();
 
-    let msg = 'Olá! Gostaria de solicitar um orçamento para aluguel de brinquedos.\n\n';
+    let msg = 'Olá! Acabei de fazer um pedido de reserva pelo site.\n\n';
+    if (customerName) msg += `Nome: ${customerName}\n\n`;
     msg += 'Brinquedos selecionados:\n';
     groups.forEach((g) => {
       const label = g.type === 'combo' ? `${g.names.join(' + ')} (combo)` : g.names[0];
@@ -585,10 +664,8 @@
     }
     msg += `\n\nValor total: ${money(total)}`;
 
-    whatsappBtn.href = wa ? `https://wa.me/${wa}?text=${encodeURIComponent(msg)}` : '#';
+    return `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
   }
-
-  addressInput.addEventListener('input', updateWhatsAppLink);
 
   // ---------- Lightbox ----------
 
@@ -670,6 +747,7 @@
     };
 
     const submitBtn = form.querySelector('button[type="submit"]');
+    const submitLabel = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Enviando...';
 
@@ -688,7 +766,10 @@
           validateRange();
         }
       } else {
-        showFeedback('success', 'Reserva enviada com sucesso! Em breve entraremos em contato para confirmar.');
+        // Build the WhatsApp link from live form state before resetting it.
+        const waUrl = buildWhatsAppUrl(payload.customerName);
+
+        showFeedback('success', 'Pedido enviado com sucesso! Você será direcionado ao WhatsApp para confirmar com a gente.');
         form.reset();
         state.selectedIds.clear();
         state.selectedDate = null;
@@ -704,12 +785,14 @@
         renderRangeStatus();
         renderBudgetSummary();
         loadAvailability();
+
+        if (waUrl) window.open(waUrl, '_blank');
       }
     } catch (err) {
       showFeedback('error', 'Erro de conexão. Tente novamente.');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Enviar solicitação de reserva';
+      submitBtn.textContent = submitLabel;
     }
   });
 

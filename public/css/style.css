@@ -400,6 +400,8 @@ section { padding: 64px 0; }
 
 .booking-panel h3 { margin-top: 0; }
 
+.address-subtitle { font-size: 0.95rem; font-weight: 700; color: var(--gray); margin: 4px 0 10px; }
+
 .field { margin-bottom: 16px; }
 .field label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
 .field input,

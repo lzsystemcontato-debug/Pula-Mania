@@ -156,11 +156,34 @@
             <label for="f-email">E-mail</label>
             <input id="f-email" type="email" placeholder="seuemail@exemplo.com" />
           </div>
+          <h4 class="address-subtitle">Endereço do evento</h4>
           <div class="field">
-            <label for="f-address">Endereço do evento *</label>
-            <input id="f-address" type="text" required placeholder="Rua, número, bairro, cidade" />
-            <small id="distance-status" class="distance-status"></small>
+            <label for="f-cep">CEP (opcional)</label>
+            <input id="f-cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" />
+            <small id="cep-status" class="distance-status"></small>
           </div>
+          <div class="field-row">
+            <div class="field" style="flex:2">
+              <label for="f-street">Rua *</label>
+              <input id="f-street" type="text" required placeholder="Rua, sítio, chácara, área de lazer..." />
+            </div>
+            <div class="field" style="flex:1">
+              <label for="f-number">Número</label>
+              <input id="f-number" type="text" placeholder="Nº" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="f-neighborhood">Bairro</label>
+              <input id="f-neighborhood" type="text" placeholder="Bairro" />
+            </div>
+            <div class="field">
+              <label for="f-city">Cidade *</label>
+              <input id="f-city" type="text" required placeholder="Cidade" />
+            </div>
+          </div>
+          <input type="hidden" id="f-address" />
+          <small id="distance-status" class="distance-status"></small>
           <div class="field-row">
             <div class="field">
               <label for="f-date">Data de início</label>
@@ -182,8 +205,7 @@
             <p class="budget-empty">Selecione ao menos um brinquedo para ver o valor.</p>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block">Enviar solicitação de reserva</button>
-          <a id="whatsapp-budget-btn" href="#" target="_blank" class="btn btn-whatsapp btn-block" style="margin-top:10px">💬 Enviar orçamento por WhatsApp</a>
+          <button type="submit" class="btn btn-primary btn-block">💬 Finalizar pedido e enviar no WhatsApp</button>
           <div id="booking-feedback" class="booking-feedback"></div>
         </form>
       </div>
