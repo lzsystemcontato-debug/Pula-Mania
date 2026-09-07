@@ -40,6 +40,20 @@
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
   }
 
+  // Opens WhatsApp to the customer's own phone with a "pagamento final
+  // recebido" message — used right after an admin marks the final payment
+  // as recebido, mirroring openConfirmationWhatsApp above.
+  function openFinalPaymentWhatsApp(b) {
+    const wa = String(b.phone || '').replace(/\D/g, '');
+    if (!wa) return;
+    let msg = `Olá, ${b.customerName}! 💰\n\n`;
+    msg += `Confirmamos o recebimento do pagamento final do seu pedido:\n`;
+    msg += `${itemNames(b)}\n`;
+    msg += `Período: ${periodLabel(b)}\n\n`;
+    msg += `Está tudo certo para o seu evento. Qualquer dúvida, estamos à disposição!`;
+    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
   async function api(url, options) {
     const res = await fetch(url, {
       headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'PulaManiaAdmin' },
@@ -188,11 +202,12 @@
         <td>${escapeHtml(itemNames(b))}</td>
         <td>${escapeHtml(b.address)}</td>
         <td>${b.distanceKm ? `${b.distanceKm.toLocaleString('pt-BR')} km<br><span style="color:var(--gray)">${money(b.travelFee)}</span>` : '-'}</td>
-        <td><strong>${money(b.total)}</strong><br><span style="color:var(--gray);font-size:0.75rem">subtotal ${money(b.subtotal)}</span></td>
+        <td><strong>${money(b.total)}</strong><br><span style="color:var(--gray);font-size:0.75rem">subtotal ${money(b.subtotal)}</span>${b.finalPaid ? '<br><span class="badge badge-confirmed" style="margin-top:2px">✔ Pago</span>' : ''}</td>
         <td><span class="badge badge-${b.status}">${STATUS_LABEL[b.status]}</span></td>
         <td>${contractStatusCell(b)}</td>
         <td class="actions-cell">
           ${b.status !== 'confirmed' ? `<button class="btn btn-outline btn-sm" data-action="confirmed" data-id="${b.id}">Confirmar</button>` : ''}
+          ${b.depositPaid && !b.finalPaid ? `<button class="btn btn-outline btn-sm" data-action="final-payment" data-id="${b.id}">💵 Marcar pagamento final</button>` : ''}
           ${b.status !== 'completed' ? `<button class="btn btn-outline btn-sm" data-action="completed" data-id="${b.id}">Concluir</button>` : ''}
           ${b.status !== 'cancelled' ? `<button class="btn btn-outline btn-sm" data-action="cancelled" data-id="${b.id}">Cancelar</button>` : ''}
           <button class="btn btn-danger btn-sm" data-action="delete" data-id="${b.id}">Excluir</button>
@@ -211,6 +226,11 @@
           } else if (action === 'deposit') {
             if (!confirm('Confirmar que o sinal (primeira parte do pagamento) foi recebido? Isso vai gerar o link de assinatura do contrato para o cliente.')) return;
             await api(`/api/admin/bookings/${id}/deposit`, { method: 'PATCH' });
+          } else if (action === 'final-payment') {
+            if (!confirm('Confirmar que o pagamento final (restante do valor) foi recebido? O WhatsApp para avisar o cliente será aberto em seguida.')) return;
+            await api(`/api/admin/bookings/${id}/final-payment`, { method: 'PATCH' });
+            const booking = state.bookings.find((x) => x.id === Number(id));
+            if (booking) openFinalPaymentWhatsApp(booking);
           } else {
             await api(`/api/admin/bookings/${id}`, { method: 'PATCH', body: JSON.stringify({ status: action }) });
             if (action === 'confirmed') {

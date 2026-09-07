@@ -115,6 +115,7 @@ router.post('/bookings', async (req, res) => {
     total,
     status: 'pending',
     depositPaid: false,
+    finalPaid: false,
     contractToken: crypto.randomBytes(24).toString('hex'),
     contractSignedAt: null,
     contractSignature: null,

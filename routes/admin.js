@@ -137,6 +137,17 @@ router.patch('/bookings/:id/deposit', async (req, res) => {
   res.json({ booking, contractPath: `/contrato/${booking.contractToken}` });
 });
 
+// Marca o pagamento final (restante do valor) como recebido.
+router.patch('/bookings/:id/final-payment', async (req, res) => {
+  const db = await load();
+  const booking = db.bookings.find((b) => b.id === Number(req.params.id));
+  if (!booking) return res.status(404).json({ error: 'Reserva não encontrada.' });
+
+  booking.finalPaid = true;
+  await save(db);
+  res.json({ booking });
+});
+
 router.delete('/bookings/:id', async (req, res) => {
   const db = await load();
   const idx = db.bookings.findIndex((b) => b.id === Number(req.params.id));
