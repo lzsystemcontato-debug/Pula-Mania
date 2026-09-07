@@ -38,6 +38,7 @@
   const dateInput = document.getElementById('f-date');
   const daysInput = document.getElementById('f-days');
   const rangeStatusEl = document.getElementById('range-status');
+  const cpfInput = document.getElementById('f-cpf');
   const addressInput = document.getElementById('f-address');
   const cepInput = document.getElementById('f-cep');
   const streetInput = document.getElementById('f-street');
@@ -455,6 +456,19 @@
     return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5, 8)}` : digits;
   }
 
+  function formatCpf(digits) {
+    let out = digits.slice(0, 3);
+    if (digits.length > 3) out += `.${digits.slice(3, 6)}`;
+    if (digits.length > 6) out += `.${digits.slice(6, 9)}`;
+    if (digits.length > 9) out += `-${digits.slice(9, 11)}`;
+    return out;
+  }
+
+  cpfInput.addEventListener('input', () => {
+    const digits = cpfInput.value.replace(/\D/g, '').slice(0, 11);
+    cpfInput.value = formatCpf(digits);
+  });
+
   cepInput.addEventListener('input', () => {
     const digits = cepInput.value.replace(/\D/g, '').slice(0, 8);
     cepInput.value = formatCep(digits);
@@ -734,6 +748,8 @@
       return;
     }
 
+    const cpfValue = cpfInput.value.trim();
+
     const payload = {
       productIds: Array.from(state.selectedIds),
       customerName: document.getElementById('f-name').value.trim(),
@@ -768,8 +784,9 @@
       } else {
         // Build the WhatsApp link from live form state before resetting it.
         const waUrl = buildWhatsAppUrl(payload.customerName);
+        const contractToken = data.booking && data.booking.contractToken;
 
-        showFeedback('success', 'Pedido enviado com sucesso! Você será direcionado ao WhatsApp para confirmar com a gente.');
+        showFeedback('success', 'Pedido enviado com sucesso! Preencha seus dados e assine o contrato para confirmar.');
         form.reset();
         state.selectedIds.clear();
         state.selectedDate = null;
@@ -786,7 +803,11 @@
         renderBudgetSummary();
         loadAvailability();
 
-        if (waUrl) window.open(waUrl, '_blank');
+        if (contractToken && window.openContractModal) {
+          window.openContractModal(contractToken, waUrl, { cpf: cpfValue });
+        } else if (waUrl) {
+          window.open(waUrl, '_blank');
+        }
       }
     } catch (err) {
       showFeedback('error', 'Erro de conexão. Tente novamente.');

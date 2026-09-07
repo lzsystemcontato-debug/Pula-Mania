@@ -710,6 +710,96 @@ section { padding: 64px 0; }
 }
 .lightbox-dots .dot.active { background: white; }
 
+/* ---------- Contract signing modal ---------- */
+
+.contract-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  z-index: 210;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 40px 16px;
+}
+.contract-backdrop.show { display: flex; }
+
+.contract-card {
+  position: relative;
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  max-width: 560px;
+  width: 100%;
+}
+
+.contract-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--gray-light);
+  border: none;
+  color: var(--dark);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.contract-summary {
+  background: var(--gray-light);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+  font-size: 0.9rem;
+}
+.contract-summary dt { color: var(--gray); font-size: 0.75rem; text-transform: uppercase; letter-spacing: .03em; margin-top: 10px; }
+.contract-summary dt:first-child { margin-top: 0; }
+.contract-summary dd { margin: 2px 0 0; font-weight: 600; color: var(--dark); }
+
+.terms-box {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  color: #374151;
+  background: #fafafa;
+  margin-bottom: 18px;
+}
+
+.contract-field { margin-bottom: 14px; }
+.contract-field label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+.contract-field input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; font-family: inherit; }
+
+.accept-row { display: flex; gap: 10px; align-items: flex-start; font-size: 0.85rem; margin: 18px 0; }
+.accept-row input { margin-top: 3px; width: auto; }
+
+.contract-state { text-align: center; padding: 20px 10px; }
+.contract-state .icon { font-size: 2.4rem; margin-bottom: 10px; }
+
+.contract-alert {
+  background: #fdecec;
+  color: #b3261e;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: none;
+}
+.contract-alert.show { display: block; }
+
+@media (max-width: 480px) {
+  .contract-card { padding: 20px; }
+}
+
 /* ---------- How it works ---------- */
 
 .steps {

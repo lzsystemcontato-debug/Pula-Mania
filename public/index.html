@@ -152,9 +152,15 @@
               <input id="f-phone" type="tel" required placeholder="(00) 00000-0000" />
             </div>
           </div>
-          <div class="field">
-            <label for="f-email">E-mail</label>
-            <input id="f-email" type="email" placeholder="seuemail@exemplo.com" />
+          <div class="field-row">
+            <div class="field">
+              <label for="f-email">E-mail</label>
+              <input id="f-email" type="email" placeholder="seuemail@exemplo.com" />
+            </div>
+            <div class="field">
+              <label for="f-cpf">CPF *</label>
+              <input id="f-cpf" type="text" required inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
+            </div>
           </div>
           <h4 class="address-subtitle">Endereço do evento</h4>
           <div class="field">
@@ -221,6 +227,13 @@
   <div class="lightbox-dots" id="lightbox-dots"></div>
 </div>
 
+<div class="contract-backdrop" id="contract-modal">
+  <div class="contract-card">
+    <button type="button" class="contract-close" id="contract-close" aria-label="Fechar">✕</button>
+    <div id="contract-modal-body"></div>
+  </div>
+</div>
+
 <footer id="contato">
   <div class="container">
     <div>
@@ -244,6 +257,7 @@
   <div class="footer-bottom">© <span id="year"></span> Pula Mania. Todos os direitos reservados.</div>
 </footer>
 
+<script src="/js/contrato-checkout.js"></script>
 <script src="/js/main.js"></script>
 </body>
 </html>

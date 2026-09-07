@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const { load, save } = require('../lib/db');
 const { getUnavailableDates, isDateAvailable, isRangeAvailable, addDays, todayStr } = require('../lib/availability');
 const { distanceBetweenAddresses } = require('../lib/geo');
@@ -114,7 +115,7 @@ router.post('/bookings', async (req, res) => {
     total,
     status: 'pending',
     depositPaid: false,
-    contractToken: null,
+    contractToken: crypto.randomBytes(24).toString('hex'),
     contractSignedAt: null,
     contractSignature: null,
     createdAt: new Date().toISOString()
