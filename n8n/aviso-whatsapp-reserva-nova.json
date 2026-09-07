@@ -1,0 +1,57 @@
+{
+  "name": "Pula Mania — Aviso WhatsApp de reserva nova",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pula-mania-nova-reserva",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook (nova reserva)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 0],
+      "webhookId": "pula-mania-nova-reserva"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { booking, settings } = $input.first().json.body;\n\nconst itens = (booking.items || []).map((i) => i.name).join(', ');\nconst periodo = booking.endDate && booking.endDate !== booking.eventDate\n  ? `${booking.eventDate} a ${booking.endDate} (${booking.days} dia(s))`\n  : booking.eventDate;\n\nconst mensagem = `🎉 Nova reserva recebida!\\n\\nCliente: ${booking.customerName}\\nTelefone: ${booking.phone}\\nBrinquedos: ${itens}\\nPeríodo: ${periodo}\\nEndereço: ${booking.address}\\nTotal: R$ ${booking.total}\\n\\nAcesse o painel para confirmar.`;\n\n// Número que deve RECEBER o aviso (o dono do negócio), não o do cliente.\nconst numeroDono = settings.whatsapp;\n\nreturn [{ json: { numeroDono, mensagem } }];"
+      },
+      "id": "format-message",
+      "name": "Montar mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [40, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.numeroDono, \"text\": $json.mensagem } }}",
+        "options": {}
+      },
+      "id": "send-whatsapp",
+      "name": "Enviar WhatsApp (Evolution API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [280, 0]
+    }
+  ],
+  "connections": {
+    "Webhook (nova reserva)": {
+      "main": [[{ "node": "Montar mensagem", "type": "main", "index": 0 }]]
+    },
+    "Montar mensagem": {
+      "main": [[{ "node": "Enviar WhatsApp (Evolution API)", "type": "main", "index": 0 }]]
+    }
+  }
+}

@@ -42,7 +42,7 @@
 
   async function api(url, options) {
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'PulaManiaAdmin' },
       ...options
     });
     if (res.status === 401) {
@@ -77,7 +77,11 @@
     document.getElementById('blocked-form').addEventListener('submit', onAddBlockedDate);
     document.getElementById('settings-form').addEventListener('submit', onSaveSettings);
     document.getElementById('delivery-form').addEventListener('submit', onSaveDelivery);
+    document.getElementById('terms-form').addEventListener('submit', onSaveTerms);
     document.getElementById('password-form').addEventListener('submit', onChangePassword);
+    document.getElementById('filter-deposit').addEventListener('change', renderBookingsTable);
+    document.getElementById('filter-contract-status').addEventListener('change', renderContractsTable);
+    document.getElementById('contract-modal-close').addEventListener('click', closeContractModal);
 
     document.getElementById('add-product-btn').addEventListener('click', () => openProductModal(null));
     document.getElementById('product-cancel-btn').addEventListener('click', closeProductModal);
@@ -92,7 +96,7 @@
   }
 
   const VIEW_TITLES = {
-    overview: 'Visão geral', bookings: 'Reservas', calendar: 'Calendário',
+    overview: 'Visão geral', bookings: 'Reservas', contracts: 'Contratos', calendar: 'Calendário',
     products: 'Produtos', blocked: 'Datas bloqueadas', settings: 'Configurações'
   };
 
@@ -102,6 +106,7 @@
     document.getElementById(`view-${view}`).classList.add('active');
     document.getElementById('view-title').textContent = VIEW_TITLES[view] || '';
     if (view === 'overview') loadOverview();
+    if (view === 'contracts') renderContractsTable();
     if (view === 'calendar') renderAdminCalendar();
   }
 
@@ -140,10 +145,31 @@
     renderBookingsTable();
   }
 
+  function contractUrl(b) {
+    return b.contractToken ? `${window.location.origin}/contrato/${b.contractToken}` : '';
+  }
+
+  function contractStatusCell(b) {
+    if (!b.depositPaid) {
+      return `<button class="btn btn-outline btn-sm" data-action="deposit" data-id="${b.id}">💰 Marcar sinal pago</button>`;
+    }
+    if (b.contractSignedAt) {
+      return `<span class="badge badge-confirmed">✔ Assinado</span>`;
+    }
+    return `
+      <span class="badge badge-pending">⚠ Aguardando assinatura</span><br>
+      <button class="btn btn-outline btn-sm" data-copy="${b.id}" style="margin-top:4px">🔗 Copiar link</button>
+      <button class="btn btn-whatsapp btn-sm" data-send-wa="${b.id}" style="margin-top:4px">💬 Enviar WhatsApp</button>
+    `;
+  }
+
   function renderBookingsTable() {
     const filter = document.getElementById('filter-status').value;
+    const depositFilter = document.getElementById('filter-deposit').value;
     let list = [...state.bookings];
     if (filter) list = list.filter((b) => b.status === filter);
+    if (depositFilter === 'paid') list = list.filter((b) => b.depositPaid);
+    if (depositFilter === 'unpaid') list = list.filter((b) => !b.depositPaid);
     list.sort((a, b) => (a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0));
 
     const el = document.getElementById('bookings-table');
@@ -153,7 +179,7 @@
     }
 
     el.innerHTML = `<table><thead><tr>
-        <th>Período</th><th>Cliente</th><th>Contato</th><th>Brinquedos</th><th>Endereço</th><th>Distância</th><th>Total</th><th>Status</th><th>Ações</th>
+        <th>Período</th><th>Cliente</th><th>Contato</th><th>Brinquedos</th><th>Endereço</th><th>Distância</th><th>Total</th><th>Status</th><th>Contrato</th><th>Ações</th>
       </tr></thead><tbody>
       ${list.map((b) => `<tr>
         <td>${periodLabel(b)}</td>
@@ -164,6 +190,7 @@
         <td>${b.distanceKm ? `${b.distanceKm.toLocaleString('pt-BR')} km<br><span style="color:var(--gray)">${money(b.travelFee)}</span>` : '-'}</td>
         <td><strong>${money(b.total)}</strong><br><span style="color:var(--gray);font-size:0.75rem">subtotal ${money(b.subtotal)}</span></td>
         <td><span class="badge badge-${b.status}">${STATUS_LABEL[b.status]}</span></td>
+        <td>${contractStatusCell(b)}</td>
         <td class="actions-cell">
           ${b.status !== 'confirmed' ? `<button class="btn btn-outline btn-sm" data-action="confirmed" data-id="${b.id}">Confirmar</button>` : ''}
           ${b.status !== 'completed' ? `<button class="btn btn-outline btn-sm" data-action="completed" data-id="${b.id}">Concluir</button>` : ''}
@@ -181,6 +208,9 @@
           if (action === 'delete') {
             if (!confirm('Excluir esta reserva permanentemente?')) return;
             await api(`/api/admin/bookings/${id}`, { method: 'DELETE' });
+          } else if (action === 'deposit') {
+            if (!confirm('Confirmar que o sinal (primeira parte do pagamento) foi recebido? Isso vai gerar o link de assinatura do contrato para o cliente.')) return;
+            await api(`/api/admin/bookings/${id}/deposit`, { method: 'PATCH' });
           } else {
             await api(`/api/admin/bookings/${id}`, { method: 'PATCH', body: JSON.stringify({ status: action }) });
             if (action === 'confirmed') {
@@ -193,6 +223,135 @@
         } catch (e) { alert(e.message); }
       });
     });
+
+    el.querySelectorAll('button[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const b = state.bookings.find((x) => x.id === Number(btn.dataset.copy));
+        if (!b) return;
+        navigator.clipboard.writeText(contractUrl(b)).then(() => {
+          const original = btn.textContent;
+          btn.textContent = '✔ Copiado!';
+          setTimeout(() => { btn.textContent = original; }, 1500);
+        });
+      });
+    });
+
+    el.querySelectorAll('button[data-send-wa]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const b = state.bookings.find((x) => x.id === Number(btn.dataset.sendWa));
+        if (!b) return;
+        const wa = String(b.phone || '').replace(/\D/g, '');
+        if (!wa) { alert('Este cliente não tem telefone cadastrado.'); return; }
+        const msg = `Olá, ${b.customerName}! Recebemos seu sinal 🎉\n\nPara confirmar sua reserva, precisamos que você assine o contrato de locação (leva menos de 1 minuto):\n${contractUrl(b)}`;
+        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+      });
+    });
+  }
+
+  // ---------- Contracts ----------
+
+  function contractState(b) {
+    if (!b.depositPaid) return 'none';
+    if (b.contractSignedAt) return 'signed';
+    return 'pending';
+  }
+
+  function fmtSignedAt(iso) {
+    const d = new Date(iso);
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} às ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function fmtCpf(cpf) {
+    const d = String(cpf || '').replace(/\D/g, '');
+    if (d.length !== 11) return cpf || '-';
+    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`;
+  }
+
+  function renderContractsTable() {
+    const list = [...state.bookings].filter((b) => b.depositPaid || b.contractToken);
+    const filter = document.getElementById('filter-contract-status').value;
+
+    document.getElementById('stat-contracts-signed').textContent = state.bookings.filter((b) => contractState(b) === 'signed').length;
+    document.getElementById('stat-contracts-pending').textContent = state.bookings.filter((b) => contractState(b) === 'pending').length;
+    document.getElementById('stat-contracts-none').textContent = state.bookings.filter((b) => contractState(b) === 'none').length;
+
+    let filtered = list;
+    if (filter) filtered = filtered.filter((b) => contractState(b) === filter);
+    filtered.sort((a, b) => (a.eventDate < b.eventDate ? 1 : -1));
+
+    const el = document.getElementById('contracts-table');
+    if (!filtered.length) {
+      el.innerHTML = '<div class="empty-state">Nenhum contrato encontrado.</div>';
+      return;
+    }
+
+    const STATE_BADGE = {
+      signed: '<span class="badge badge-confirmed">✔ Assinado</span>',
+      pending: '<span class="badge badge-pending">⚠ Aguardando assinatura</span>',
+      none: '<span class="badge badge-cancelled">Sinal não pago</span>'
+    };
+
+    el.innerHTML = `<table><thead><tr>
+        <th>Cliente</th><th>Período</th><th>Total</th><th>Status</th><th>Assinado em</th><th>Ações</th>
+      </tr></thead><tbody>
+      ${filtered.map((b) => `<tr>
+        <td>${escapeHtml(b.customerName)}</td>
+        <td>${periodLabel(b)}</td>
+        <td>${money(b.total)}</td>
+        <td>${STATE_BADGE[contractState(b)]}</td>
+        <td>${b.contractSignedAt ? fmtSignedAt(b.contractSignedAt) : '-'}</td>
+        <td class="actions-cell">
+          ${b.contractSignedAt ? `<button class="btn btn-outline btn-sm" data-view-sig="${b.id}">👁 Ver assinatura</button>` : ''}
+          ${b.contractToken && !b.contractSignedAt ? `<button class="btn btn-outline btn-sm" data-copy-c="${b.id}">🔗 Copiar link</button>
+          <button class="btn btn-whatsapp btn-sm" data-send-wa-c="${b.id}">💬 WhatsApp</button>` : ''}
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+
+    el.querySelectorAll('button[data-view-sig]').forEach((btn) => {
+      btn.addEventListener('click', () => openContractModal(state.bookings.find((x) => x.id === Number(btn.dataset.viewSig))));
+    });
+    el.querySelectorAll('button[data-copy-c]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const b = state.bookings.find((x) => x.id === Number(btn.dataset.copyC));
+        if (!b) return;
+        navigator.clipboard.writeText(contractUrl(b)).then(() => {
+          const original = btn.textContent;
+          btn.textContent = '✔ Copiado!';
+          setTimeout(() => { btn.textContent = original; }, 1500);
+        });
+      });
+    });
+    el.querySelectorAll('button[data-send-wa-c]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const b = state.bookings.find((x) => x.id === Number(btn.dataset.sendWaC));
+        if (!b) return;
+        const wa = String(b.phone || '').replace(/\D/g, '');
+        if (!wa) { alert('Este cliente não tem telefone cadastrado.'); return; }
+        const msg = `Olá, ${b.customerName}! Recebemos seu sinal 🎉\n\nPara confirmar sua reserva, precisamos que você assine o contrato de locação (leva menos de 1 minuto):\n${contractUrl(b)}`;
+        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+      });
+    });
+  }
+
+  function openContractModal(b) {
+    if (!b || !b.contractSignature) return;
+    const sig = b.contractSignature;
+    document.getElementById('contract-modal-body').innerHTML = `
+      <p><strong>Cliente:</strong> ${escapeHtml(b.customerName)}</p>
+      <p><strong>Nome informado na assinatura:</strong> ${escapeHtml(sig.fullName)}</p>
+      <p><strong>CPF:</strong> ${fmtCpf(sig.cpf)}</p>
+      <p><strong>Endereço:</strong> ${escapeHtml(sig.address)}</p>
+      <p><strong>Assinado em:</strong> ${fmtSignedAt(sig.signedAt)}</p>
+      <p><strong>IP:</strong> ${escapeHtml(sig.ip || '-')}</p>
+      <p style="word-break:break-all"><strong>Dispositivo:</strong> ${escapeHtml(sig.userAgent || '-')}</p>
+      <p><strong>Link do contrato:</strong> <a href="${contractUrl(b)}" target="_blank">${contractUrl(b)}</a></p>
+    `;
+    document.getElementById('contract-modal').classList.add('show');
+  }
+
+  function closeContractModal() {
+    document.getElementById('contract-modal').classList.remove('show');
   }
 
   // ---------- Calendar ----------
@@ -437,6 +596,28 @@
     document.getElementById('s-instagram').value = s.instagram || '';
     document.getElementById('s-address').value = s.address || '';
     document.getElementById('s-pricePerKm').value = s.pricePerKm != null ? s.pricePerKm : 2;
+    document.getElementById('s-rentalTerms').value = s.rentalTerms || '';
+    document.getElementById('s-ownerFullName').value = s.ownerFullName || '';
+    document.getElementById('s-ownerCpf').value = s.ownerCpf || '';
+  }
+
+  async function onSaveTerms(e) {
+    e.preventDefault();
+    const fb = document.getElementById('terms-feedback');
+    const payload = {
+      rentalTerms: document.getElementById('s-rentalTerms').value,
+      ownerFullName: document.getElementById('s-ownerFullName').value.trim(),
+      ownerCpf: document.getElementById('s-ownerCpf').value.trim()
+    };
+    try {
+      await api('/api/admin/settings', { method: 'PUT', body: JSON.stringify(payload) });
+      fb.style.color = '#047857';
+      fb.textContent = 'Salvo com sucesso!';
+      setTimeout(() => (fb.textContent = ''), 3000);
+    } catch (err) {
+      fb.style.color = '#b91c1c';
+      fb.textContent = err.message;
+    }
   }
 
   async function onSaveSettings(e) {

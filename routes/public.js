@@ -3,6 +3,7 @@ const { load, save } = require('../lib/db');
 const { getUnavailableDates, isDateAvailable, isRangeAvailable, addDays, todayStr } = require('../lib/availability');
 const { distanceBetweenAddresses } = require('../lib/geo');
 const { computeDailySubtotal } = require('../lib/pricing');
+const { notifyN8n } = require('../lib/webhook');
 
 const router = express.Router();
 
@@ -112,11 +113,17 @@ router.post('/bookings', async (req, res) => {
     subtotal,
     total,
     status: 'pending',
+    depositPaid: false,
+    contractToken: null,
+    contractSignedAt: null,
+    contractSignature: null,
     createdAt: new Date().toISOString()
   };
 
   db.bookings.push(booking);
   await save(db);
+
+  notifyN8n('new_booking', { booking, settings: db.settings });
 
   res.status(201).json({ booking });
 });

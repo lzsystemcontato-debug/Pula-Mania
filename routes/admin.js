@@ -1,7 +1,24 @@
 const express = require('express');
+const crypto = require('crypto');
 const { load, save, verifyPassword, hashPassword } = require('../lib/db');
 
 const router = express.Router();
+
+// CSRF: bloqueia requisições que mudam dados (POST/PUT/PATCH/DELETE) vindas
+// de fora do próprio painel. Um site malicioso pode fazer o navegador enviar
+// o cookie de sessão automaticamente, mas não consegue adicionar este header
+// customizado sem que o navegador dispare um preflight CORS — que falha
+// porque não liberamos CORS para outras origens. GET fica de fora porque não
+// muda dado nenhum.
+function csrfProtection(req, res, next) {
+  const isMutating = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method);
+  if (isMutating && req.get('X-Requested-With') !== 'PulaManiaAdmin') {
+    return res.status(403).json({ error: 'Requisição bloqueada (proteção CSRF).' });
+  }
+  next();
+}
+
+router.use(csrfProtection);
 
 function requireAuth(req, res, next) {
   if (req.session && req.session.isAdmin) return next();
@@ -103,6 +120,21 @@ router.patch('/bookings/:id', async (req, res) => {
   if (typeof notes === 'string') booking.notes = notes;
   await save(db);
   res.json({ booking });
+});
+
+// Marca o sinal (primeira parte do pagamento) como pago e gera (ou reaproveita)
+// um link único para o cliente assinar o contrato de locação.
+router.patch('/bookings/:id/deposit', async (req, res) => {
+  const db = await load();
+  const booking = db.bookings.find((b) => b.id === Number(req.params.id));
+  if (!booking) return res.status(404).json({ error: 'Reserva não encontrada.' });
+
+  booking.depositPaid = true;
+  if (!booking.contractToken) {
+    booking.contractToken = crypto.randomBytes(24).toString('hex');
+  }
+  await save(db);
+  res.json({ booking, contractPath: `/contrato/${booking.contractToken}` });
 });
 
 router.delete('/bookings/:id', async (req, res) => {
@@ -210,7 +242,7 @@ router.delete('/blocked-dates/:id', async (req, res) => {
 
 router.put('/settings', async (req, res) => {
   const db = await load();
-  const { companyName, whatsapp, email, city, instagram, address, pricePerKm } = req.body || {};
+  const { companyName, whatsapp, email, city, instagram, address, pricePerKm, rentalTerms, ownerFullName, ownerCpf } = req.body || {};
   if (companyName !== undefined) db.settings.companyName = companyName;
   if (whatsapp !== undefined) db.settings.whatsapp = whatsapp;
   if (email !== undefined) db.settings.email = email;
@@ -218,6 +250,9 @@ router.put('/settings', async (req, res) => {
   if (instagram !== undefined) db.settings.instagram = instagram;
   if (address !== undefined) db.settings.address = address;
   if (pricePerKm !== undefined) db.settings.pricePerKm = Number(pricePerKm) || 0;
+  if (rentalTerms !== undefined) db.settings.rentalTerms = String(rentalTerms);
+  if (ownerFullName !== undefined) db.settings.ownerFullName = String(ownerFullName);
+  if (ownerCpf !== undefined) db.settings.ownerCpf = String(ownerCpf);
   await save(db);
   res.json({ settings: db.settings });
 });

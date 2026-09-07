@@ -55,7 +55,7 @@
     try {
       const res = await fetch('/api/admin/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'PulaManiaAdmin' },
         body: JSON.stringify({ username, password })
       });
       const data = await res.json();

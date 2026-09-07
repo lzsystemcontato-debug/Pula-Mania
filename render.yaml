@@ -6,7 +6,11 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: SESSION_SECRET
         generateValue: true
       - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+      - key: N8N_WEBHOOK_URL
         sync: false

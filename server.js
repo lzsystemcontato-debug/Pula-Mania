@@ -4,9 +4,16 @@ const path = require('path');
 
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
+const contractRoutes = require('./routes/contract');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// Render (e qualquer host atrás de proxy/load balancer) termina o HTTPS antes
+// do Node; sem isso, o Express nunca vê a conexão como "secure" e o cookie
+// com secure:true nunca seria enviado de volta pelo navegador.
+if (IS_PRODUCTION) app.set('trust proxy', 1);
 
 app.use(express.json());
 app.use(
@@ -17,6 +24,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
+      secure: IS_PRODUCTION,
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 8 // 8 hours
     }
   })
@@ -24,6 +33,7 @@ app.use(
 
 app.use('/api', publicRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/contract', contractRoutes);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -33,6 +43,10 @@ app.get('/admin', (req, res) => {
 
 app.get('/admin/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'dashboard.html'));
+});
+
+app.get('/contrato/:token', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'contrato.html'));
 });
 
 app.get('*', (req, res) => {

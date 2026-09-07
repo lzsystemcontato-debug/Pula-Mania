@@ -18,6 +18,8 @@ O site abre em `http://localhost:3000` e o painel administrativo em `http://loca
 - `server.js` — servidor Express
 - `routes/public.js` — API pública (produtos, disponibilidade, criação de reserva)
 - `routes/admin.js` — API do painel admin (login, reservas, produtos, bloqueio de datas, configurações)
+- `routes/contract.js` — API pública do contrato de locação (consulta e assinatura pelo cliente)
+- `lib/webhook.js` — envia um aviso ao n8n quando uma reserva nova é criada (opcional, ver seção abaixo)
 - `lib/db.js` — persistência de dados: usa Firestore (Firebase) quando a variável de ambiente `FIREBASE_SERVICE_ACCOUNT`
   (ou `GOOGLE_APPLICATION_CREDENTIALS`) está definida (produção); caso contrário, usa um arquivo JSON local
   (`data/db.json`) como alternativa simples para rodar sem banco de dados durante o desenvolvimento.
@@ -30,6 +32,44 @@ O site abre em `http://localhost:3000` e o painel administrativo em `http://loca
 - **Produtos/brinquedos**: edite em Painel Admin → Produtos (adicionar, editar preço, foto/ícone, ativar/desativar).
 - **Bloquear datas** (feriados, manutenção): Painel Admin → Datas bloqueadas.
 - Os dados ficam salvos em `data/db.json`. Faça backup desse arquivo periodicamente.
+
+## Sinal pago + assinatura do contrato de locação
+
+Quando você marca em **Painel Admin → Reservas → 💰 Marcar sinal pago** que o sinal (primeira parte do pagamento)
+foi recebido, o sistema gera um link único de contrato para aquele pedido (`/contrato/<token>`). Nele o cliente:
+
+1. Vê o resumo do pedido (brinquedos, período, endereço, valor).
+2. Lê os termos de locação (editáveis em **Painel Admin → Configurações → Termos de locação** — o texto que vem
+   pronto é só um modelo de exemplo, **revise com um advogado antes de usar oficialmente**).
+3. Preenche nome completo, CPF e endereço, e marca que aceita os termos.
+4. Ao confirmar, fica registrado a data/hora, o IP e o texto exato aceito — funciona como comprovante de aceite.
+
+No painel, use os botões **🔗 Copiar link** ou **💬 Enviar WhatsApp** para mandar o link ao cliente. Um pedido só
+aparece como "✔ Assinado" depois que o cliente confirma pelo próprio link — a reserva em si (status
+pendente/confirmada/etc.) continua sendo controlada separadamente pelos botões de status de sempre.
+
+## Aviso automático no WhatsApp de reserva nova (n8n)
+
+Sempre que uma reserva é criada pelo site, o servidor pode avisar automaticamente um número de WhatsApp (ex. o do
+dono do negócio) via [n8n](https://n8n.io) + [Evolution API](https://github.com/EvolutionAPI/evolution-api). Isso é
+opcional — sem configurar nada, o site funciona normalmente.
+
+**Como configurar:**
+
+1. Tenha um n8n rodando (self-hosted ou [n8n.cloud](https://n8n.cloud)) e uma instância da Evolution API conectada
+   ao WhatsApp que vai enviar os avisos.
+2. No n8n, importe o arquivo [`n8n/aviso-whatsapp-reserva-nova.json`](n8n/aviso-whatsapp-reserva-nova.json)
+   (Workflows → Import from File).
+3. No workflow importado, configure as variáveis de ambiente do n8n `EVOLUTION_API_URL`, `EVOLUTION_INSTANCE` e
+   `EVOLUTION_API_KEY` com os dados da sua Evolution API.
+4. Ative o workflow e copie a URL do node **Webhook (nova reserva)** (aba "Production URL").
+5. No site, defina a variável de ambiente `N8N_WEBHOOK_URL` com essa URL (veja `.env.example`; no Render, adicione
+   em Settings → Environment).
+6. Pronto — toda reserva nova dispara o webhook, que monta a mensagem e envia via Evolution API para o número
+   configurado em **Painel Admin → Configurações → WhatsApp**.
+
+O envio nunca bloqueia nem quebra a criação da reserva: se o n8n estiver fora do ar, a reserva é salva normalmente e
+o erro só aparece no log do servidor.
 
 ## Publicar online
 

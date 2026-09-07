@@ -14,6 +14,7 @@
     <nav class="side-nav">
       <button data-view="overview" class="active">📊 Visão geral</button>
       <button data-view="bookings">📋 Reservas</button>
+      <button data-view="contracts">📝 Contratos</button>
       <button data-view="calendar">📅 Calendário</button>
       <button data-view="products">🎪 Produtos</button>
       <button data-view="blocked">🚫 Datas bloqueadas</button>
@@ -58,9 +59,37 @@
               <option value="completed">Concluída</option>
               <option value="cancelled">Cancelada</option>
             </select>
+            <select id="filter-deposit">
+              <option value="">Sinal: todos</option>
+              <option value="paid">Sinal pago</option>
+              <option value="unpaid">Sinal pendente</option>
+            </select>
           </div>
         </div>
         <div id="bookings-table"></div>
+      </div>
+    </section>
+
+    <!-- CONTRACTS -->
+    <section class="view" id="view-contracts">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Contratos de locação</h2>
+          <div class="filters">
+            <select id="filter-contract-status">
+              <option value="">Todos</option>
+              <option value="signed">Assinados</option>
+              <option value="pending">Aguardando assinatura</option>
+              <option value="none">Sinal não pago (sem contrato)</option>
+            </select>
+          </div>
+        </div>
+        <div class="stat-grid" style="margin-bottom:20px">
+          <div class="stat-card green"><div class="label">Assinados</div><div class="value" id="stat-contracts-signed">–</div></div>
+          <div class="stat-card pink"><div class="label">Aguardando assinatura</div><div class="value" id="stat-contracts-pending">–</div></div>
+          <div class="stat-card cyan"><div class="label">Sinal ainda não pago</div><div class="value" id="stat-contracts-none">–</div></div>
+        </div>
+        <div id="contracts-table"></div>
       </div>
     </section>
 
@@ -138,6 +167,21 @@
         </form>
       </div>
       <div class="panel">
+        <div class="panel-head"><h2>Termos de locação</h2></div>
+        <form id="terms-form">
+          <div class="field" style="display:flex; gap:12px;">
+            <div style="flex:1"><label>Nome completo do responsável (Locadora, para o contrato)</label><input id="s-ownerFullName" type="text" /></div>
+            <div style="flex:1"><label>CPF do responsável</label><input id="s-ownerCpf" type="text" placeholder="000.000.000-00" /></div>
+          </div>
+          <div class="field">
+            <label>Texto do contrato exibido para o cliente assinar ao pagar o sinal</label>
+            <textarea id="s-rentalTerms" rows="10"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Salvar termos</button>
+          <span id="terms-feedback" style="margin-left:12px; font-size:0.85rem; font-weight:600;"></span>
+        </form>
+      </div>
+      <div class="panel">
         <div class="panel-head"><h2>Alterar senha</h2></div>
         <form id="password-form">
           <div class="field"><label>Senha atual</label><input id="p-current" type="password" required /></div>
@@ -208,6 +252,17 @@
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Contract signature detail modal -->
+<div class="modal-backdrop" id="contract-modal">
+  <div class="modal">
+    <h3>Detalhes da assinatura</h3>
+    <div id="contract-modal-body" style="font-size:0.9rem; line-height:1.7;"></div>
+    <div class="modal-close-row">
+      <button type="button" class="btn btn-outline" id="contract-modal-close">Fechar</button>
+    </div>
   </div>
 </div>
 

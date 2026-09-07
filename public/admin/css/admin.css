@@ -86,6 +86,7 @@ body {
 .btn-block { width: 100%; }
 .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--dark); }
 .btn-danger { background: #fee2e2; color: var(--red); }
+.btn-whatsapp { background: #25d366; color: white; }
 .btn-sm { padding: 7px 13px; font-size: 0.8rem; }
 
 .alert { padding: 12px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; display:none; }
